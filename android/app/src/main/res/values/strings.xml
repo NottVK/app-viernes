@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SofKev</string>
+    <string name="title_activity_main">SofKev</string>
+    <string name="package_name">com.SofKev.app</string>
+    <string name="custom_url_scheme">com.SofKev.app</string>
+</resources>
