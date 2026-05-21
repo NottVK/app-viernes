@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { HashRouter, Route, Routes, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
@@ -7,7 +7,7 @@ import ResetPassword from './pages/ResetPassword'
 
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<Login />} />
@@ -19,7 +19,7 @@ function App() {
           </ProtectedRoute>
         } />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
