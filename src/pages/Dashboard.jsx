@@ -315,10 +315,10 @@ export default function Dashboard() {
         {/* DASHBOARD */}
         {activeSection === 'dashboard' && (
           <div>
-            <div style={{ position: 'relative', height: '100vh', overflow: 'hidden' }}>
-              <video autoPlay muted loop playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.4)' }}>
-                <source src="/hero.mp4" type="video/mp4" />
-              </video>
+           <div style={{ position: 'relative', height: '100vh', overflow: 'hidden' }}>
+  <video autoPlay muted loop playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.4)' }}>
+    <source src="https://videos.pexels.com/video-files/3129671/3129671-uhd_2560_1440_30fps.mp4" type="video/mp4" />
+  </video>
               <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'white', textAlign: 'center', padding: '20px' }}>
                 <div style={{ fontSize: 'clamp(28px, 5vw, 56px)', fontWeight: '700', lineHeight: 1.2, marginBottom: '16px', opacity: Math.max(0, 1 - scrollY / 200), transform: `translateY(${scrollY * 0.3}px)` }}>
                   Bienvenido, {nombre} 👋
