@@ -43,6 +43,30 @@ export default function Dashboard() {
     sidebar: ledOn ? '#0a0a0a' : '#0f172a',
   }
 
+  // ---- ESTADOS PARA CONFIGURACIÓN DE CONEXIÓN ----
+  const [editandoMqtt, setEditandoMqtt] = useState(false)
+  const [editandoHttp, setEditandoHttp] = useState(false)
+  const [mqttConfig, setMqttConfig] = useState(() => {
+    const saved = localStorage.getItem('mqttConfig')
+    return saved ? JSON.parse(saved) : {
+      host: 'broker.hivemq.cloud',
+      port: '8884',
+      user: import.meta.env.VITE_MQTT_USER || '',
+      pass: import.meta.env.VITE_MQTT_PASS || '',
+      protocol: 'wss',
+    }
+  })
+  const [httpConfig, setHttpConfig] = useState(() => {
+    const saved = localStorage.getItem('httpConfig')
+    return saved ? JSON.parse(saved) : {
+      baseUrl: 'https://YOUR-PROJECT.supabase.co',
+      apiKey: import.meta.env.VITE_SUPABASE_KEY || '',
+      service: 'supabase',
+    }
+  })
+  const [tempMqttConfig, setTempMqttConfig] = useState(mqttConfig)
+  const [tempHttpConfig, setTempHttpConfig] = useState(httpConfig)
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768)
     window.addEventListener('resize', handleResize)
@@ -343,6 +367,20 @@ export default function Dashboard() {
     client.publish('led/control', newState ? 'ON' : 'OFF')
     if (newState) setLedOnCount(c => c + 1)
     else setLedOffCount(c => c + 1)
+  }
+
+  const guardarMqttConfig = () => {
+    localStorage.setItem('mqttConfig', JSON.stringify(tempMqttConfig))
+    setMqttConfig(tempMqttConfig)
+    setEditandoMqtt(false)
+    alert('✅ Configuración MQTT guardada. Reinicia la app para aplicar cambios.')
+  }
+
+  const guardarHttpConfig = () => {
+    localStorage.setItem('httpConfig', JSON.stringify(tempHttpConfig))
+    setHttpConfig(tempHttpConfig)
+    setEditandoHttp(false)
+    alert('✅ Configuración HTTP guardada. Reinicia la app para aplicar cambios.')
   }
 
   const nombre = perfil?.nombre || user?.email?.split('@')[0] || 'Usuario'
@@ -773,48 +811,217 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* CONEXIÓN */}
-          {activeSection === 'mqtt' && (
-            <div style={{ padding: '40px 20px', maxWidth: '600px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              {[
-                {
-                  icon: '◈', title: 'Conexión MQTT',
-                  items: [
-                    { label: 'Broker', value: 'HiveMQ Cloud' },
-                    { label: 'Estado', value: mqttStatus, color: mqttStatus.includes('✅') ? '#22c55e' : '#f59e0b' },
-                    { label: 'Topic publicación', value: 'led/control' },
-                    { label: 'Topic suscripción', value: 'led/estado' },
-                    { label: 'Puerto', value: '8884 (WSS)' },
-                    { label: 'Protocolo', value: 'MQTT over WebSocket' },
-                  ]
-                },
-                {
-                  icon: '🌐', title: 'Conexión HTTP',
-                  items: [
-                    { label: 'Estado internet', value: httpStatus, color: httpStatus.includes('✅') ? '#22c55e' : '#ef4444' },
-                    { label: 'Base de datos', value: 'Supabase ✅', color: '#22c55e' },
-                    { label: 'Autenticación', value: 'Supabase Auth ✅', color: '#22c55e' },
-                    { label: 'Protocolo', value: 'HTTPS / REST API' },
-                  ]
-                }
-              ].map(section => (
-                <div key={section.title} style={{ background: theme.card, borderRadius: '16px', padding: '32px', border: `1px solid ${theme.border}`, transition: 'all 0.5s ease' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
-                    <span style={{ fontSize: '22px' }}>{section.icon}</span>
-                    <div style={{ fontSize: '18px', fontWeight: '600', color: theme.text }}>{section.title}</div>
-                  </div>
-                  {section.items.map(item => (
-                    <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: `1px solid ${theme.border}` }}>
-                      <span style={{ fontSize: '14px', color: theme.textMuted }}>{item.label}</span>
-                      <span style={{ fontSize: '14px', fontWeight: '500', color: item.color || theme.text }}>{item.value}</span>
+       {/* CONEXIÓN */}
+{activeSection === 'mqtt' && (
+  <div style={{ padding: '40px 20px', maxWidth: '600px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
+    {/* ── MQTT ── */}
+    <div style={{ background: theme.card, borderRadius: '16px', padding: '32px', border: `1px solid ${theme.border}`, transition: 'all 0.5s ease' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '22px' }}>◈</span>
+          <div style={{ fontSize: '18px', fontWeight: '600', color: theme.text }}>Conexión MQTT</div>
+        </div>
+        <button onClick={() => setEditandoMqtt(true)} style={{ background: '#0ea5e9', color: 'white', border: 'none', borderRadius: '8px', padding: '6px 12px', fontSize: '12px', cursor: 'pointer', fontWeight: '500' }}>✏️ Editar</button>
+      </div>
+
+      <div style={{ fontSize: '11px', fontWeight: '600', color: theme.textMuted, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px' }}>Broker activo</div>
+      <div style={{ background: ledOn ? '#0a1628' : '#eff6ff', border: '2px solid #0ea5e9', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '20px' }}>☁️</span>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: '600', color: theme.text }}>{mqttConfig.host}</div>
+              <div style={{ fontSize: '12px', color: theme.textMuted }}>Puerto {mqttConfig.port} · {mqttConfig.protocol.toUpperCase()}</div>
+            </div>
+          </div>
+          <span style={{ fontSize: '12px', background: '#14532d22', border: '1px solid #166534', color: '#22c55e', padding: '3px 10px', borderRadius: '20px' }}>
+            {mqttStatus}
+          </span>
+        </div>
+      </div>
+
+      <div style={{ borderTop: `1px solid ${theme.border}`, paddingTop: '16px' }}>
+        <div style={{ fontSize: '11px', fontWeight: '600', color: theme.textMuted, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px' }}>Detalles</div>
+        {[
+          { label: 'Host', value: mqttConfig.host },
+          { label: 'Puerto', value: mqttConfig.port },
+          { label: 'Usuario', value: mqttConfig.user ? mqttConfig.user.substring(0, 3) + '...' : 'No configurado' },
+          { label: 'Protocolo', value: mqttConfig.protocol.toUpperCase() },
+          { label: 'Topic publicación', value: 'led/control' },
+          { label: 'Topic suscripción', value: 'led/estado' },
+        ].map(item => (
+          <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: `1px solid ${theme.border}` }}>
+            <span style={{ fontSize: '14px', color: theme.textMuted }}>{item.label}</span>
+            <span style={{ fontSize: '14px', fontWeight: '500', color: theme.text }}>{item.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* ── HTTP ── */}
+    <div style={{ background: theme.card, borderRadius: '16px', padding: '32px', border: `1px solid ${theme.border}`, transition: 'all 0.5s ease' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '22px' }}>🌐</span>
+          <div style={{ fontSize: '18px', fontWeight: '600', color: theme.text }}>Conexión HTTP</div>
+        </div>
+        <button onClick={() => setEditandoHttp(true)} style={{ background: '#0ea5e9', color: 'white', border: 'none', borderRadius: '8px', padding: '6px 12px', fontSize: '12px', cursor: 'pointer', fontWeight: '500' }}>✏️ Editar</button>
+      </div>
+
+      <div style={{ fontSize: '11px', fontWeight: '600', color: theme.textMuted, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px' }}>Base de datos activa</div>
+      <div style={{ background: ledOn ? '#0a1628' : '#eff6ff', border: '2px solid #0ea5e9', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '20px' }}>🗄️</span>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: '600', color: theme.text }}>{httpConfig.service === 'supabase' ? 'Supabase' : 'API Personalizada'}</div>
+              <div style={{ fontSize: '12px', color: theme.textMuted }}>REST API · {httpConfig.baseUrl.includes('supabase') ? 'Auth incluido' : 'Endpoint propio'}</div>
+            </div>
+          </div>
+          <span style={{ fontSize: '12px', background: '#14532d22', border: '1px solid #166534', color: '#22c55e', padding: '3px 10px', borderRadius: '20px' }}>
+            {httpStatus}
+          </span>
+        </div>
+      </div>
+
+      <div style={{ borderTop: `1px solid ${theme.border}`, paddingTop: '16px' }}>
+        <div style={{ fontSize: '11px', fontWeight: '600', color: theme.textMuted, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px' }}>Estado</div>
+        {[
+          { label: 'Internet', value: httpStatus, color: httpStatus.includes('✅') ? '#22c55e' : '#ef4444' },
+          { label: 'Base de datos', value: httpConfig.service === 'supabase' ? 'Supabase ✅' : 'Personalizada', color: '#22c55e' },
+          { label: 'URL Base', value: httpConfig.baseUrl.substring(0, 25) + '...', color: theme.text },
+          { label: 'Protocolo', value: 'HTTPS / REST API' },
+        ].map(item => (
+          <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: `1px solid ${theme.border}` }}>
+            <span style={{ fontSize: '14px', color: theme.textMuted }}>{item.label}</span>
+            <span style={{ fontSize: '14px', fontWeight: '500', color: item.color || theme.text }}>{item.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+
+  </div>
+)}
+
+          {/* MODAL EDITAR MQTT */}
+          {editandoMqtt && (
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', overflowY: 'auto' }}>
+              <div style={{ background: theme.card, borderRadius: '20px', padding: '32px', width: '100%', maxWidth: '440px', margin: 'auto', border: `1px solid ${theme.border}` }}>
+                <div style={{ fontSize: '18px', fontWeight: '600', color: theme.text, marginBottom: '24px' }}>⚙️ Configurar MQTT</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {[
+                    { label: 'Host del broker', key: 'host', placeholder: 'broker.hivemq.cloud' },
+                    { label: 'Puerto', key: 'port', placeholder: '8884', type: 'number' },
+                    { label: 'Usuario', key: 'user', placeholder: 'usuario' },
+                    { label: 'Contraseña', key: 'pass', placeholder: 'contraseña', type: 'password' },
+                  ].map(field => (
+                    <div key={field.key}>
+                      <label style={{ fontSize: '13px', color: theme.textMuted, display: 'block', marginBottom: '6px' }}>{field.label}</label>
+                      <input 
+                        type={field.type || 'text'}
+                        value={tempMqttConfig[field.key]} 
+                        onChange={e => setTempMqttConfig(c => ({ ...c, [field.key]: e.target.value }))} 
+                        placeholder={field.placeholder} 
+                        style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: `1px solid ${theme.border}`, fontSize: '14px', outline: 'none', boxSizing: 'border-box', background: theme.card, color: theme.text, transition: 'all 0.5s ease' }} 
+                      />
                     </div>
                   ))}
+                  <div>
+                    <label style={{ fontSize: '13px', color: theme.textMuted, display: 'block', marginBottom: '6px' }}>Protocolo</label>
+                    <select 
+                      value={tempMqttConfig.protocol}
+                      onChange={e => setTempMqttConfig(c => ({ ...c, protocol: e.target.value }))}
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: `1px solid ${theme.border}`, fontSize: '14px', outline: 'none', boxSizing: 'border-box', background: theme.card, color: theme.text }}
+                    >
+                      <option value="wss">WSS (Seguro - WebSocket)</option>
+                      <option value="ws">WS (WebSocket)</option>
+                      <option value="mqtt">MQTT (TCP)</option>
+                      <option value="mqtts">MQTTS (TCP Seguro)</option>
+                    </select>
+                  </div>
+                  <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                    <button 
+                      onClick={() => {
+                        setEditandoMqtt(false)
+                        setTempMqttConfig(mqttConfig)
+                      }} 
+                      style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${theme.border}`, borderRadius: '8px', fontSize: '14px', cursor: 'pointer', color: theme.textMuted }}
+                    >
+                      Cancelar
+                    </button>
+                    <button 
+                      onClick={guardarMqttConfig} 
+                      style={{ flex: 1, padding: '12px', background: '#0ea5e9', border: 'none', borderRadius: '8px', fontSize: '14px', cursor: 'pointer', color: 'white', fontWeight: '500' }}
+                    >
+                      Guardar
+                    </button>
+                  </div>
                 </div>
-              ))}
+              </div>
             </div>
           )}
 
-          {/* QUIÉNES SOMOS */}
+          {/* MODAL EDITAR HTTP */}
+          {editandoHttp && (
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', overflowY: 'auto' }}>
+              <div style={{ background: theme.card, borderRadius: '20px', padding: '32px', width: '100%', maxWidth: '440px', margin: 'auto', border: `1px solid ${theme.border}` }}>
+                <div style={{ fontSize: '18px', fontWeight: '600', color: theme.text, marginBottom: '24px' }}>⚙️ Configurar HTTP</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <div>
+                    <label style={{ fontSize: '13px', color: theme.textMuted, display: 'block', marginBottom: '6px' }}>Servicio</label>
+                    <select 
+                      value={tempHttpConfig.service}
+                      onChange={e => setTempHttpConfig(c => ({ ...c, service: e.target.value }))}
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: `1px solid ${theme.border}`, fontSize: '14px', outline: 'none', boxSizing: 'border-box', background: theme.card, color: theme.text }}
+                    >
+                      <option value="supabase">Supabase</option>
+                      <option value="firebase">Firebase</option>
+                      <option value="custom">API Personalizada</option>
+                    </select>
+                  </div>
+                  {[
+                    { label: 'URL Base', key: 'baseUrl', placeholder: 'https://your-project.supabase.co' },
+                    { label: 'API Key / Token', key: 'apiKey', placeholder: 'tu-api-key', type: 'password' },
+                  ].map(field => (
+                    <div key={field.key}>
+                      <label style={{ fontSize: '13px', color: theme.textMuted, display: 'block', marginBottom: '6px' }}>{field.label}</label>
+                      <input 
+                        type={field.type || 'text'}
+                        value={tempHttpConfig[field.key]} 
+                        onChange={e => setTempHttpConfig(c => ({ ...c, [field.key]: e.target.value }))} 
+                        placeholder={field.placeholder} 
+                        style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: `1px solid ${theme.border}`, fontSize: '14px', outline: 'none', boxSizing: 'border-box', background: theme.card, color: theme.text, transition: 'all 0.5s ease' }} 
+                      />
+                    </div>
+                  ))}
+                  <div style={{ background: theme.sectionBg, padding: '12px', borderRadius: '8px', borderLeft: '3px solid #f59e0b' }}>
+                    <div style={{ fontSize: '12px', color: theme.textMuted, lineHeight: '1.6' }}>
+                      ⚠️ <strong>Importante:</strong> La configuración se guarda localmente. Reinicia la app para aplicar cambios.
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                    <button 
+                      onClick={() => {
+                        setEditandoHttp(false)
+                        setTempHttpConfig(httpConfig)
+                      }} 
+                      style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${theme.border}`, borderRadius: '8px', fontSize: '14px', cursor: 'pointer', color: theme.textMuted }}
+                    >
+                      Cancelar
+                    </button>
+                    <button 
+                      onClick={guardarHttpConfig} 
+                      style={{ flex: 1, padding: '12px', background: '#0ea5e9', border: 'none', borderRadius: '8px', fontSize: '14px', cursor: 'pointer', color: 'white', fontWeight: '500' }}
+                    >
+                      Guardar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {activeSection === 'quienes' && (
             <div style={{ padding: '40px 20px', maxWidth: '700px', margin: '0 auto' }}>
               <div style={{ background: 'linear-gradient(135deg, #0f172a, #1e3a5f)', borderRadius: '20px', overflow: 'hidden', marginBottom: '32px', border: '1px solid #1e4080' }}>
