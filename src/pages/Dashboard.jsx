@@ -3,6 +3,102 @@ import { supabase } from '../supabase'
 import { useNavigate } from 'react-router-dom'
 import { client } from '../mqtt'
 
+// ╔═══════════════════════════════════════════════════════════════════════════════╗
+// ║                    🎨 CONFIGURACIÓN DE DISEÑO Y COLORES                       ║
+// ║                                                                               ║
+// ║  Modifica estos valores para cambiar la apariencia general de la aplicación   ║
+// ╚═══════════════════════════════════════════════════════════════════════════════╝
+
+const DESIGN_CONFIG = {
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // 🎯 BOTONES - Tamaño y estilos
+  // ═══════════════════════════════════════════════════════════════════════════════
+  BUTTON: {
+    PRIMARY_COLOR: '#0ea5e9',        // Color principal de botones (azul)
+    PRIMARY_HOVER: '#0284c7',        // Color al pasar mouse (azul más oscuro)
+    SECONDARY_COLOR: '#f87171',      // Color de botones secundarios (rojo)
+    PADDING: '12px 16px',            // Relleno interno: vertical horizontal
+    BORDER_RADIUS: '8px',            // Redondez de esquinas (en px)
+    FONT_SIZE: '14px',               // Tamaño del texto en botones
+    FONT_WEIGHT: '500',              // Grosor del texto (400=normal, 700=bold)
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // 🎨 TARJETAS - Estilos de contenedores principales
+  // ═══════════════════════════════════════════════════════════════════════════════
+  CARD: {
+    PADDING: '32px',                 // Espaciado interno de tarjetas
+    BORDER_RADIUS: '16px',           // Redondez de esquinas
+    BORDER_WIDTH: '1px',             // Grosor del borde
+    SHADOW: '0 4px 6px rgba(0,0,0,0.1)', // Sombra de la tarjeta
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // 📊 GRÁFICAS Y COLORES PRINCIPALES
+  // ═══════════════════════════════════════════════════════════════════════════════
+  CHARTS: {
+    MQTT_COLOR: '#38bdf8',           // Color línea MQTT (celeste)
+    MQTT_BG: 'rgba(56,189,248,0.08)', // Fondo semi-transparente MQTT
+    HTTP_COLOR: '#4ade80',           // Color barras HTTP (verde)
+    LED_COLOR: '#fde047',            // Color LED (amarillo)
+    SUCCESS_COLOR: '#22c55e',        // Color éxito (verde oscuro)
+    ERROR_COLOR: '#ef4444',          // Color error (rojo)
+    WARNING_COLOR: '#f59e0b',        // Color advertencia (naranja)
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // 📝 INPUTS Y CAMPOS DE FORMULARIO
+  // ═══════════════════════════════════════════════════════════════════════════════
+  INPUT: {
+    PADDING: '10px 14px',            // Relleno del input
+    BORDER_RADIUS: '8px',            // Redondez de esquinas
+    FONT_SIZE: '14px',               // Tamaño del texto
+    BORDER_WIDTH: '1px',             // Grosor del borde
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // 💬 MODALES Y DIÁLOGOS
+  // ═══════════════════════════════════════════════════════════════════════════════
+  MODAL: {
+    PADDING: '32px',                 // Relleno interno del modal
+    BORDER_RADIUS: '20px',           // Redondez de esquinas
+    MAX_WIDTH: '440px',              // Ancho máximo del modal
+    OVERLAY_OPACITY: '0.6',          // Opacidad del fondo oscuro (0-1)
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // 🔤 TIPOGRAFÍA - Tamaños de texto
+  // ═══════════════════════════════════════════════════════════════════════════════
+  TYPOGRAPHY: {
+    HEADING_LARGE: 'clamp(28px, 5vw, 56px)',    // Títulos muy grandes
+    HEADING_MEDIUM: 'clamp(20px, 3vw, 32px)',   // Títulos medianos
+    HEADING_SMALL: 'clamp(16px, 2vw, 24px)',    // Títulos pequeños
+    SUBHEADING: '18px',                          // Subtítulos
+    BODY: '14px',                                // Texto normal
+    SMALL: '13px',                               // Texto pequeño
+    TINY: '11px',                                // Texto muy pequeño
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // 🎭 ANIMACIONES Y TRANSICIONES
+  // ═══════════════════════════════════════════════════════════════════════════════
+  ANIMATION: {
+    DURATION_FAST: '0.2s',           // Animaciones rápidas
+    DURATION_NORMAL: '0.3s',         // Animaciones normales
+    DURATION_SLOW: '0.5s',           // Animaciones lentas
+    EASING: 'ease',                  // Tipo de animación (ease, linear, ease-in-out)
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // 📐 ESPACIADO - Márgenes y rellenos (rem = 16px)
+  // ═══════════════════════════════════════════════════════════════════════════════
+  SPACING: {
+    SECTION_PADDING: '60px 20px',    // Relleno de secciones grandes
+    CARD_GAP: '24px',                // Espacio entre tarjetas
+    INPUT_GAP: '14px',               // Espacio entre inputs
+  },
+}
+
 export default function Dashboard() {
   const navigate = useNavigate()
   const [ledOn, setLedOn] = useState(false)
@@ -32,14 +128,43 @@ export default function Dashboard() {
   const ledChartInst = useRef(null)
   const chartsInterval = useRef(null)
 
+  // ╔═══════════════════════════════════════════════════════════════════════════════╗
+  // ║                     🌓 TEMA DINÁMICO (OSCURO/CLARO)                          ║
+  // ║                                                                               ║
+  // ║  Estos colores cambian automáticamente según el estado del LED               ║
+  // ║  Modifica estos códigos HEX para personalizar el tema de la app              ║
+  // ╚═══════════════════════════════════════════════════════════════════════════════╝
   const theme = {
+    // Fondo principal de la aplicación
+    // Oscuro: #000000 | Claro: #f8fafc
     bg: ledOn ? '#000000' : '#f8fafc',
+    
+    // Fondo de tarjetas y componentes
+    // Oscuro: #111111 | Claro: #ffffff
     card: ledOn ? '#111111' : '#ffffff',
+    
+    // Color de bordes
+    // Oscuro: #222222 | Claro: #e2e8f0
     border: ledOn ? '#222222' : '#e2e8f0',
+    
+    // Color de texto principal
+    // Oscuro: #f1f5f9 | Claro: #0f172a
     text: ledOn ? '#f1f5f9' : '#0f172a',
+    
+    // Color de texto secundario/muted
+    // Oscuro: #64748b | Claro: #94a3b8
     textMuted: ledOn ? '#64748b' : '#94a3b8',
+    
+    // Barra superior
+    // Oscuro: rgba(0,0,0,0.95) | Claro: rgba(248,250,252,0.95)
     topbar: ledOn ? 'rgba(0,0,0,0.95)' : 'rgba(248,250,252,0.95)',
+    
+    // Fondo de secciones
+    // Oscuro: #050505 | Claro: #f1f5f9
     sectionBg: ledOn ? '#050505' : '#f1f5f9',
+    
+    // Barra lateral (sidebar)
+    // Oscuro: #0a0a0a | Claro: #0f172a
     sidebar: ledOn ? '#0a0a0a' : '#0f172a',
   }
 
@@ -331,12 +456,22 @@ export default function Dashboard() {
   const subirFotoGrupo = async (e) => {
     const file = e.target.files[0]
     if (!file) return
-    const ext = file.name.split('.').pop()
-    const fileName = `foto_grupo.${ext}`
-    const { error } = await supabase.storage.from('grupo').upload(fileName, file, { upsert: true })
-    if (!error) {
-      const { data } = supabase.storage.from('grupo').getPublicUrl(fileName)
+    // Usar un nombre fijo para que siempre se sobreescriba la misma clave
+    const fileName = `foto_grupo.jpg`
+    // Intentar subir al bucket 'grupo' y, si no existe, usar 'miembros' como respaldo
+    let bucket = 'grupo'
+    let resp = await supabase.storage.from(bucket).upload(fileName, file, { upsert: true })
+    if (resp.error && resp.error.message && resp.error.message.includes('Bucket not found')) {
+      console.warn("Bucket 'grupo' no encontrado, intentando 'miembros' como respaldo")
+      bucket = 'miembros'
+      resp = await supabase.storage.from(bucket).upload(fileName, file, { upsert: true })
+    }
+    if (!resp.error) {
+      const { data } = supabase.storage.from(bucket).getPublicUrl(fileName)
       setGrupoFotoUrl(data.publicUrl + '?t=' + Date.now())
+    } else {
+      console.error('Error subiendo foto de grupo:', resp.error)
+      alert('No se pudo subir la foto del grupo. Revisa la consola para más detalles.')
     }
   }
 
@@ -429,7 +564,17 @@ export default function Dashboard() {
 
   const SIDEBAR_WIDTH = 260
 
+  // ╔═══════════════════════════════════════════════════════════════════════════════╗
+  // ║                         🎨 RENDERIZADO PRINCIPAL                             ║
+  // ║                                                                               ║
+  // ║  Estructura principal del dashboard. Los estilos puedes cambiarlos            ║
+  // ║  usando los valores de DESIGN_CONFIG o directamente en los estilos inline   ║
+  // ╚═══════════════════════════════════════════════════════════════════════════════╝
   return (
+    // Contenedor principal - Flex para layout horizontal
+    // height: '100vh' = altura de toda la pantalla
+    // overflow: 'hidden' = sin scroll, todo debe caber
+    // background: theme.sidebar = color de fondo (cambia con tema)
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', fontFamily: 'system-ui, sans-serif', background: theme.sidebar, transition: 'all 0.5s ease' }}>
 
       {isMobile && sidebarOpen && (
@@ -439,7 +584,7 @@ export default function Dashboard() {
         />
       )}
 
-      {/* Modal editar miembro */}
+      {/* 🎨 MODAL EDITAR PERFIL - Cambiar colores y tamaños aquí */}
       {editandoMiembro && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', overflowY: 'auto' }}>
           <div style={{ background: 'white', borderRadius: '20px', padding: '32px', width: '100%', maxWidth: '440px', margin: 'auto' }}>
@@ -566,7 +711,17 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* 🔴 BOTÓN CERRAR SESIÓN */}
         <div style={{ padding: '16px 20px' }}>
+          {/* PERSONALIZACIÓN DE BOTONES:
+              📝 Cambiar colores:
+              - background: 'transparent' → cambiar a '#f87171' para fondo rojo
+              - color: '#f87171' → DESIGN_CONFIG.CHARTS.ERROR_COLOR para rojo
+              📐 Cambiar tamaño:
+              - padding: '9px' → usa DESIGN_CONFIG.BUTTON.PADDING
+              - fontSize: '13px' → usa DESIGN_CONFIG.TYPOGRAPHY.SMALL
+              - borderRadius: '8px' → usa DESIGN_CONFIG.BUTTON.BORDER_RADIUS
+          */}
           <button onClick={handleLogout} style={{ width: '100%', padding: '9px', background: 'transparent', color: '#f87171', border: '1px solid #374151', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
             <span>⎋</span> Cerrar sesión
           </button>
@@ -788,16 +943,37 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Control LED */}
+              {/* 💡 CONTROL LED - Personalización de diseño */}
               <div style={{ background: theme.sectionBg, padding: '80px 20px', transition: 'background 0.5s ease' }}>
                 <div style={{ maxWidth: '480px', margin: '0 auto' }}>
                   <div style={{ textAlign: 'center', marginBottom: '40px' }}>
                     <div style={{ fontSize: 'clamp(20px, 3vw, 28px)', fontWeight: '600', color: theme.text }}>Control del LED</div>
                     <div style={{ color: theme.textMuted, marginTop: '8px' }}>ESP32 — GPIO 2</div>
                   </div>
+                  {/* 📦 TARJETA LED - Cambiar estilos:
+                      - borderRadius: '24px' → redondez de esquinas
+                      - padding: '40px' → espacio interno de la tarjeta
+                      - background: theme.card → color de fondo
+                      - boxShadow: '0 0 60px rgba(253,224,71,0.3)' → sombra cuando está encendido
+                  */}
                   <div style={{ background: theme.card, borderRadius: '24px', padding: '40px', border: `1px solid ${theme.border}`, textAlign: 'center', boxShadow: ledOn ? '0 0 60px rgba(253,224,71,0.3)' : 'none', transition: 'all 0.5s ease' }}>
+                    {/* 🟡 CÍRCULO LED - Personalización:
+                        - width: '100px', height: '100px' → tamaño del círculo
+                        - borderRadius: '50%' → hace que sea circular
+                        - background: '#fef9c3' (encendido) o '#f1f5f9' (apagado)
+                        - boxShadow: '0 0 40px #fde047, 0 0 80px #fde04744' → glow del LED
+                        Cambiar tamaño: 100px a otro valor (ej: 120px, 80px)
+                    */}
                     <div style={{ width: '100px', height: '100px', borderRadius: '50%', background: ledOn ? '#fef9c3' : '#f1f5f9', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '48px', transition: 'all 0.4s ease', boxShadow: ledOn ? '0 0 40px #fde047, 0 0 80px #fde04744' : 'none' }}>💡</div>
                     <div style={{ fontSize: '18px', fontWeight: '500', color: ledOn ? '#ca8a04' : theme.textMuted, marginBottom: '32px' }}>{ledOn ? 'Encendido' : 'Apagado'}</div>
+                    {/* 🔘 TOGGLE SWITCH - Personalización:
+                        - width: '72px', height: '36px' → tamaño del switch
+                        - borderRadius: '18px' → curvatura (18px = mitad de height)
+                        - background: '#38bdf8' (encendido) o '#cbd5e1' (apagado)
+                        Cambiar colores de encendido/apagado:
+                        - '#38bdf8' (azul) → DESIGN_CONFIG.CHARTS.MQTT_COLOR
+                        - '#cbd5e1' (gris) → color neutro
+                    */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
                       <span style={{ fontSize: '14px', color: theme.textMuted }}>OFF</span>
                       <div onClick={handleToggle} style={{ width: '72px', height: '36px', background: ledOn ? '#38bdf8' : '#cbd5e1', borderRadius: '18px', cursor: 'pointer', position: 'relative', transition: 'background 0.3s ease' }}>
@@ -815,13 +991,21 @@ export default function Dashboard() {
 {activeSection === 'mqtt' && (
   <div style={{ padding: '40px 20px', maxWidth: '600px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
-    {/* ── MQTT ── */}
+    {/* ◈ SECCIÓN MQTT */}
     <div style={{ background: theme.card, borderRadius: '16px', padding: '32px', border: `1px solid ${theme.border}`, transition: 'all 0.5s ease' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <span style={{ fontSize: '22px' }}>◈</span>
           <div style={{ fontSize: '18px', fontWeight: '600', color: theme.text }}>Conexión MQTT</div>
         </div>
+        {/* 🔵 BOTÓN EDITAR MQTT - Personalización:
+            - background: '#0ea5e9' = DESIGN_CONFIG.BUTTON.PRIMARY_COLOR (azul)
+            - padding: '6px 12px' = DESIGN_CONFIG.BUTTON.PADDING pequeño
+            - fontSize: '12px' = DESIGN_CONFIG.TYPOGRAPHY.TINY
+            - borderRadius: '8px' = DESIGN_CONFIG.BUTTON.BORDER_RADIUS
+            - color: 'white' = color del texto
+            Cambiar: background para otro color (rojo: '#f87171', verde: '#4ade80')
+        */}
         <button onClick={() => setEditandoMqtt(true)} style={{ background: '#0ea5e9', color: 'white', border: 'none', borderRadius: '8px', padding: '6px 12px', fontSize: '12px', cursor: 'pointer', fontWeight: '500' }}>✏️ Editar</button>
       </div>
 
@@ -859,13 +1043,19 @@ export default function Dashboard() {
       </div>
     </div>
 
-    {/* ── HTTP ── */}
+    {/* 🌐 SECCIÓN HTTP */}
     <div style={{ background: theme.card, borderRadius: '16px', padding: '32px', border: `1px solid ${theme.border}`, transition: 'all 0.5s ease' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <span style={{ fontSize: '22px' }}>🌐</span>
           <div style={{ fontSize: '18px', fontWeight: '600', color: theme.text }}>Conexión HTTP</div>
         </div>
+        {/* 🟢 BOTÓN EDITAR HTTP - Personalización:
+            - background: '#0ea5e9' = DESIGN_CONFIG.BUTTON.PRIMARY_COLOR (azul)
+            - Cambiar a: '#4ade80' para verde, '#f59e0b' para naranja, '#f87171' para rojo
+            - padding: '6px 12px' = DESIGN_CONFIG.BUTTON.PADDING pequeño
+            - fontSize: '12px' = DESIGN_CONFIG.TYPOGRAPHY.TINY
+        */}
         <button onClick={() => setEditandoHttp(true)} style={{ background: '#0ea5e9', color: 'white', border: 'none', borderRadius: '8px', padding: '6px 12px', fontSize: '12px', cursor: 'pointer', fontWeight: '500' }}>✏️ Editar</button>
       </div>
 
@@ -904,7 +1094,19 @@ export default function Dashboard() {
   </div>
 )}
 
-          {/* MODAL EDITAR MQTT */}
+          {/* ╔═══════════════════════════════════════════════════════════════════════════════╗
+              ║              ⚙️ MODAL EDITAR MQTT - Personalización de diseño                ║
+              ║                                                                               ║
+              ║  Cambiar colores del modal:                                                  ║
+              ║  - background: 'rgba(0,0,0,0.6)' → DESIGN_CONFIG.MODAL.OVERLAY_OPACITY    ║
+              ║  - theme.card → fondo del modal                                              ║
+              ║  - borderRadius: '20px' → DESIGN_CONFIG.MODAL.BORDER_RADIUS                ║
+              ║                                                                               ║
+              ║  Cambiar tamaños:                                                            ║
+              ║  - padding: '32px' → DESIGN_CONFIG.MODAL.PADDING                            ║
+              ║  - maxWidth: '440px' → DESIGN_CONFIG.MODAL.MAX_WIDTH                        ║
+              ║  - fontSize: '18px' → DESIGN_CONFIG.TYPOGRAPHY.SUBHEADING (título)         ║
+              ╚═══════════════════════════════════════════════════════════════════════════════╝ */}
           {editandoMqtt && (
             <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', overflowY: 'auto' }}>
               <div style={{ background: theme.card, borderRadius: '20px', padding: '32px', width: '100%', maxWidth: '440px', margin: 'auto', border: `1px solid ${theme.border}` }}>
@@ -917,7 +1119,15 @@ export default function Dashboard() {
                     { label: 'Contraseña', key: 'pass', placeholder: 'contraseña', type: 'password' },
                   ].map(field => (
                     <div key={field.key}>
+                      {/* 📝 ETIQUETA DEL INPUT */}
                       <label style={{ fontSize: '13px', color: theme.textMuted, display: 'block', marginBottom: '6px' }}>{field.label}</label>
+                      {/* 📥 INPUT - Cambiar estilos:
+                          - padding: '10px 14px' = DESIGN_CONFIG.INPUT.PADDING
+                          - borderRadius: '8px' = DESIGN_CONFIG.INPUT.BORDER_RADIUS
+                          - fontSize: '14px' = DESIGN_CONFIG.TYPOGRAPHY.BODY
+                          - border: `1px solid ${theme.border}` = color del borde
+                          - background: theme.card = fondo del input
+                      */}
                       <input 
                         type={field.type || 'text'}
                         value={tempMqttConfig[field.key]} 
@@ -928,6 +1138,7 @@ export default function Dashboard() {
                     </div>
                   ))}
                   <div>
+                    {/* 🔘 SELECT PROTOCOLO */}
                     <label style={{ fontSize: '13px', color: theme.textMuted, display: 'block', marginBottom: '6px' }}>Protocolo</label>
                     <select 
                       value={tempMqttConfig.protocol}
@@ -940,6 +1151,21 @@ export default function Dashboard() {
                       <option value="mqtts">MQTTS (TCP Seguro)</option>
                     </select>
                   </div>
+                  {/* 🔘 GRUPO DE BOTONES MODAL - Personalización:
+                      - gap: '12px' = espacio entre botones (DESIGN_CONFIG.SPACING)
+                      - padding: '12px' = DESIGN_CONFIG.BUTTON.PADDING
+                      - borderRadius: '8px' = DESIGN_CONFIG.BUTTON.BORDER_RADIUS
+                      
+                      BOTÓN CANCELAR:
+                      - background: 'transparent' = fondo transparente
+                      - border: `1px solid ${theme.border}` = borde gris
+                      - color: theme.textMuted = color del texto
+                      
+                      BOTÓN GUARDAR:
+                      - background: '#0ea5e9' = DESIGN_CONFIG.BUTTON.PRIMARY_COLOR (azul)
+                      - Cambiar a: '#4ade80' (verde), '#f87171' (rojo), '#f59e0b' (naranja)
+                      - color: 'white' = color del texto
+                  */}
                   <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
                     <button 
                       onClick={() => {
@@ -962,12 +1188,13 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* MODAL EDITAR HTTP */}
+          {/* 🌐 MODAL EDITAR HTTP */}
           {editandoHttp && (
             <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', overflowY: 'auto' }}>
               <div style={{ background: theme.card, borderRadius: '20px', padding: '32px', width: '100%', maxWidth: '440px', margin: 'auto', border: `1px solid ${theme.border}` }}>
                 <div style={{ fontSize: '18px', fontWeight: '600', color: theme.text, marginBottom: '24px' }}>⚙️ Configurar HTTP</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {/* 🔘 SELECT SERVICIO */}
                   <div>
                     <label style={{ fontSize: '13px', color: theme.textMuted, display: 'block', marginBottom: '6px' }}>Servicio</label>
                     <select 
@@ -980,6 +1207,7 @@ export default function Dashboard() {
                       <option value="custom">API Personalizada</option>
                     </select>
                   </div>
+                  {/* 📥 INPUTS HTTP */}
                   {[
                     { label: 'URL Base', key: 'baseUrl', placeholder: 'https://your-project.supabase.co' },
                     { label: 'API Key / Token', key: 'apiKey', placeholder: 'tu-api-key', type: 'password' },
@@ -995,6 +1223,12 @@ export default function Dashboard() {
                       />
                     </div>
                   ))}
+                  {/* ⚠️ CAJA ADVERTENCIA - Personalización:
+                      - background: theme.sectionBg = fondo de sección
+                      - borderLeft: '3px solid #f59e0b' = borde izquierdo naranja (advertencia)
+                      - padding: '12px' = espacio interno
+                      - color: theme.textMuted = color del texto
+                  */}
                   <div style={{ background: theme.sectionBg, padding: '12px', borderRadius: '8px', borderLeft: '3px solid #f59e0b' }}>
                     <div style={{ fontSize: '12px', color: theme.textMuted, lineHeight: '1.6' }}>
                       ⚠️ <strong>Importante:</strong> La configuración se guarda localmente. Reinicia la app para aplicar cambios.
