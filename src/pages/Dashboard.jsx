@@ -3,107 +3,11 @@ import { supabase } from '../supabase'
 import { useNavigate } from 'react-router-dom'
 import { client } from '../mqtt'
 
-// ╔═══════════════════════════════════════════════════════════════════════════════╗
-// ║                    🎨 CONFIGURACIÓN DE DISEÑO Y COLORES                       ║
-// ║                                                                               ║
-// ║  Modifica estos valores para cambiar la apariencia general de la aplicación   ║
-// ╚═══════════════════════════════════════════════════════════════════════════════╝
-
-const DESIGN_CONFIG = {
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // 🎯 BOTONES - Tamaño y estilos
-  // ═══════════════════════════════════════════════════════════════════════════════
-  BUTTON: {
-    PRIMARY_COLOR: '#0ea5e9',        // Color principal de botones (azul)
-    PRIMARY_HOVER: '#0284c7',        // Color al pasar mouse (azul más oscuro)
-    SECONDARY_COLOR: '#f87171',      // Color de botones secundarios (rojo)
-    PADDING: '12px 16px',            // Relleno interno: vertical horizontal
-    BORDER_RADIUS: '8px',            // Redondez de esquinas (en px)
-    FONT_SIZE: '14px',               // Tamaño del texto en botones
-    FONT_WEIGHT: '500',              // Grosor del texto (400=normal, 700=bold)
-  },
-
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // 🎨 TARJETAS - Estilos de contenedores principales
-  // ═══════════════════════════════════════════════════════════════════════════════
-  CARD: {
-    PADDING: '32px',                 // Espaciado interno de tarjetas
-    BORDER_RADIUS: '16px',           // Redondez de esquinas
-    BORDER_WIDTH: '1px',             // Grosor del borde
-    SHADOW: '0 4px 6px rgba(0,0,0,0.1)', // Sombra de la tarjeta
-  },
-
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // 📊 GRÁFICAS Y COLORES PRINCIPALES
-  // ═══════════════════════════════════════════════════════════════════════════════
-  CHARTS: {
-    MQTT_COLOR: '#38bdf8',           // Color línea MQTT (celeste)
-    MQTT_BG: 'rgba(56,189,248,0.08)', // Fondo semi-transparente MQTT
-    HTTP_COLOR: '#4ade80',           // Color barras HTTP (verde)
-    LED_COLOR: '#fde047',            // Color LED (amarillo)
-    SUCCESS_COLOR: '#22c55e',        // Color éxito (verde oscuro)
-    ERROR_COLOR: '#ef4444',          // Color error (rojo)
-    WARNING_COLOR: '#f59e0b',        // Color advertencia (naranja)
-  },
-
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // 📝 INPUTS Y CAMPOS DE FORMULARIO
-  // ═══════════════════════════════════════════════════════════════════════════════
-  INPUT: {
-    PADDING: '10px 14px',            // Relleno del input
-    BORDER_RADIUS: '8px',            // Redondez de esquinas
-    FONT_SIZE: '14px',               // Tamaño del texto
-    BORDER_WIDTH: '1px',             // Grosor del borde
-  },
-
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // 💬 MODALES Y DIÁLOGOS
-  // ═══════════════════════════════════════════════════════════════════════════════
-  MODAL: {
-    PADDING: '32px',                 // Relleno interno del modal
-    BORDER_RADIUS: '20px',           // Redondez de esquinas
-    MAX_WIDTH: '440px',              // Ancho máximo del modal
-    OVERLAY_OPACITY: '0.6',          // Opacidad del fondo oscuro (0-1)
-  },
-
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // 🔤 TIPOGRAFÍA - Tamaños de texto
-  // ═══════════════════════════════════════════════════════════════════════════════
-  TYPOGRAPHY: {
-    HEADING_LARGE: 'clamp(28px, 5vw, 56px)',    // Títulos muy grandes
-    HEADING_MEDIUM: 'clamp(20px, 3vw, 32px)',   // Títulos medianos
-    HEADING_SMALL: 'clamp(16px, 2vw, 24px)',    // Títulos pequeños
-    SUBHEADING: '18px',                          // Subtítulos
-    BODY: '14px',                                // Texto normal
-    SMALL: '13px',                               // Texto pequeño
-    TINY: '11px',                                // Texto muy pequeño
-  },
-
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // 🎭 ANIMACIONES Y TRANSICIONES
-  // ═══════════════════════════════════════════════════════════════════════════════
-  ANIMATION: {
-    DURATION_FAST: '0.2s',           // Animaciones rápidas
-    DURATION_NORMAL: '0.3s',         // Animaciones normales
-    DURATION_SLOW: '0.5s',           // Animaciones lentas
-    EASING: 'ease',                  // Tipo de animación (ease, linear, ease-in-out)
-  },
-
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // 📐 ESPACIADO - Márgenes y rellenos (rem = 16px)
-  // ═══════════════════════════════════════════════════════════════════════════════
-  SPACING: {
-    SECTION_PADDING: '60px 20px',    // Relleno de secciones grandes
-    CARD_GAP: '24px',                // Espacio entre tarjetas
-    INPUT_GAP: '14px',               // Espacio entre inputs
-  },
-}
-
 export default function Dashboard() {
   const navigate = useNavigate()
   const [ledOn, setLedOn] = useState(false)
-   const [ledOn2, setLedOn2] = useState(false)
-   const [ledOn3, setLedOn3] = useState(false)
+  const [ledOn2, setLedOn2] = useState(false)
+  const [ledOn3, setLedOn3] = useState(false)
   const [user, setUser] = useState(null)
   const [perfil, setPerfil] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -121,71 +25,16 @@ export default function Dashboard() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const [ledOnCount, setLedOnCount] = useState(0)
   const [ledOffCount, setLedOffCount] = useState(0)
-   const [ledOnCount2, setLedOnCount2] = useState(0)
+  const [ledOnCount2, setLedOnCount2] = useState(0)
   const [ledOffCount2, setLedOffCount2] = useState(0)
   const [ledOnCount3, setLedOnCount3] = useState(0)
   const [ledOffCount3, setLedOffCount3] = useState(0)
-  const mainRef = useRef(null)
-  const mqttChartRef = useRef(null)
-  const httpChartRef = useRef(null)
-  const ledChartRef = useRef(null)
-  const mqttChartInst = useRef(null)
-  const ledChartRef2 = useRef(null) // 💡 Nueva ref para el Canvas del Bombillo 2
-  const ledChartRef3 = useRef(null) // 💡 Nueva ref para el Canvas del Bombillo 3
-  const httpChartInst = useRef(null)
-  const ledChartInst = useRef(null)
-  const ledChartInst2 = useRef(null) // 💡 Nueva ref para la Instancia del Bombillo 2
-  const ledChartInst3 = useRef(null) // 💡 Nueva ref para la Instancia del Bombillo 3
-  const chartsInterval = useRef(null)
-
-  // ╔═══════════════════════════════════════════════════════════════════════════════╗
-  // ║                     🌓 TEMA DINÁMICO (OSCURO/CLARO)                          ║
-  // ║                                                                               ║
-  // ║  Estos colores cambian automáticamente según el estado del LED               ║
-  // ║  Modifica estos códigos HEX para personalizar el tema de la app              ║
-  // ╚═══════════════════════════════════════════════════════════════════════════════╝
-  const theme = {
-    // Fondo principal de la aplicación
-    // Oscuro: #000000 | Claro: #f8fafc
-    bg: ledOn ? '#000000' : '#f8fafc',
-    
-    // Fondo de tarjetas y componentes
-    // Oscuro: #111111 | Claro: #ffffff
-    card: ledOn ? '#111111' : '#ffffff',
-    
-    // Color de bordes
-    // Oscuro: #222222 | Claro: #e2e8f0
-    border: ledOn ? '#222222' : '#e2e8f0',
-    
-    // Color de texto principal
-    // Oscuro: #f1f5f9 | Claro: #0f172a
-    text: ledOn ? '#f1f5f9' : '#0f172a',
-    
-    // Color de texto secundario/muted
-    // Oscuro: #64748b | Claro: #94a3b8
-    textMuted: ledOn ? '#64748b' : '#94a3b8',
-    
-    // Barra superior
-    // Oscuro: rgba(0,0,0,0.95) | Claro: rgba(248,250,252,0.95)
-    topbar: ledOn ? 'rgba(0,0,0,0.95)' : 'rgba(248,250,252,0.95)',
-    
-    // Fondo de secciones
-    // Oscuro: #050505 | Claro: #f1f5f9
-    sectionBg: ledOn ? '#050505' : '#f1f5f9',
-    
-    // Barra lateral (sidebar)
-    // Oscuro: #0a0a0a | Claro: #0f172a
-    sidebar: ledOn ? '#0a0a0a' : '#0f172a',
-  }
-
-  // ---- ESTADOS PARA CONFIGURACIÓN DE CONEXIÓN ----
   const [editandoMqtt, setEditandoMqtt] = useState(false)
   const [editandoHttp, setEditandoHttp] = useState(false)
   const [mqttConfig, setMqttConfig] = useState(() => {
     const saved = localStorage.getItem('mqttConfig')
     return saved ? JSON.parse(saved) : {
-      host: 'broker.hivemq.cloud',
-      port: '8884',
+      host: 'broker.hivemq.cloud', port: '8884',
       user: import.meta.env.VITE_MQTT_USER || '',
       pass: import.meta.env.VITE_MQTT_PASS || '',
       protocol: 'wss',
@@ -194,13 +43,37 @@ export default function Dashboard() {
   const [httpConfig, setHttpConfig] = useState(() => {
     const saved = localStorage.getItem('httpConfig')
     return saved ? JSON.parse(saved) : {
-      baseUrl: 'https://YOUR-PROJECT.supabase.co',
-      apiKey: import.meta.env.VITE_SUPABASE_KEY || '',
+      baseUrl: import.meta.env.VITE_SUPABASE_URL || '',
+      apiKey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
       service: 'supabase',
     }
   })
   const [tempMqttConfig, setTempMqttConfig] = useState(mqttConfig)
   const [tempHttpConfig, setTempHttpConfig] = useState(httpConfig)
+
+  const mainRef = useRef(null)
+  const mqttChartRef = useRef(null)
+  const httpChartRef = useRef(null)
+  const ledChartRef = useRef(null)
+  const ledChartRef2 = useRef(null)
+  const ledChartRef3 = useRef(null)
+  const mqttChartInst = useRef(null)
+  const httpChartInst = useRef(null)
+  const ledChartInst = useRef(null)
+  const ledChartInst2 = useRef(null)
+  const ledChartInst3 = useRef(null)
+  const chartsInterval = useRef(null)
+
+ const theme = {
+  bg: ledOn ? '#000000' : ledOn2 ? '#1a0000' : ledOn3 ? '#001a00' : '#f8fafc',
+  card: ledOn ? '#111111' : ledOn2 ? '#1f0a0a' : ledOn3 ? '#0a1f0a' : '#ffffff',
+  border: ledOn ? '#222222' : ledOn2 ? '#3a1010' : ledOn3 ? '#103a10' : '#e2e8f0',
+  text: (ledOn || ledOn2 || ledOn3) ? '#f1f5f9' : '#0f172a',
+  textMuted: (ledOn || ledOn2 || ledOn3) ? '#64748b' : '#94a3b8',
+  topbar: ledOn ? 'rgba(0,0,0,0.95)' : ledOn2 ? 'rgba(26,0,0,0.95)' : ledOn3 ? 'rgba(0,26,0,0.95)' : 'rgba(248,250,252,0.95)',
+  sectionBg: ledOn ? '#050505' : ledOn2 ? '#150505' : ledOn3 ? '#051505' : '#f1f5f9',
+  sidebar: ledOn ? '#0a0a0a' : ledOn2 ? '#120505' : ledOn3 ? '#051205' : '#0f172a',
+}
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768)
@@ -221,9 +94,19 @@ export default function Dashboard() {
     getUser()
   }, [])
 
+  // Cargar foto de grupo desde Supabase Storage
   useEffect(() => {
-    const { data } = supabase.storage.from('miembros').getPublicUrl('foto_grupo.jpg')
-    if (data?.publicUrl) setGrupoFotoUrl(data.publicUrl)
+    const cargarFotoGrupo = async () => {
+      const { data } = supabase.storage.from('miembros').getPublicUrl('foto_grupo.jpg')
+      if (data?.publicUrl) {
+        // Verificar que la imagen existe con un HEAD request
+        try {
+          const res = await fetch(data.publicUrl, { method: 'HEAD' })
+          if (res.ok) setGrupoFotoUrl(data.publicUrl + '?t=' + Date.now())
+        } catch (_) {}
+      }
+    }
+    cargarFotoGrupo()
   }, [])
 
   useEffect(() => {
@@ -238,10 +121,9 @@ export default function Dashboard() {
     if (client.connected) setMqttStatus('Conectado ✅')
     const handlerMqttMessage = (topic, message) => {
       const msg = message.toString()
-      // Soportar topics: 'led/estado' (legacy), 'led/1/estado', 'led/2/estado', 'led/3/estado'
-      if (topic === 'led/estado' || topic === 'led/1/estado') setLedOn(msg === 'ON')
-      else if (topic === 'led/2/estado') setLedOn2(msg === 'ON')
-      else if (topic === 'led/3/estado') setLedOn3(msg === 'ON')
+     if (topic === 'led1/estado') setLedOn(msg === 'ON')
+else if (topic === 'led2/estado') setLedOn2(msg === 'ON')
+else if (topic === 'led3/estado') setLedOn3(msg === 'ON')
     }
     const onConnect = () => setMqttStatus('Conectado ✅')
     const onError = () => setMqttStatus('Error ❌')
@@ -273,178 +155,54 @@ export default function Dashboard() {
 
   useEffect(() => { cargarMiembros() }, [])
 
-  // ---- Inicializar gráficas Chart.js ----
   useEffect(() => {
     if (!mqttChartRef.current || !httpChartRef.current || !ledChartRef.current) return
-
     import('chart.js').then(({ Chart, registerables }) => {
       Chart.register(...registerables)
-
-      const rnd = (base, v) =>
-        Array.from({ length: 11 }, () => Math.round(base + (Math.random() - 0.5) * v))
+      const rnd = (base, v) => Array.from({ length: 11 }, () => Math.round(base + (Math.random() - 0.5) * v))
       const timeLabels = Array.from({ length: 11 }, (_, i) => `${i * 30}s`)
 
-      // MQTT chart
       if (mqttChartInst.current) mqttChartInst.current.destroy()
       mqttChartInst.current = new Chart(mqttChartRef.current, {
         type: 'line',
         data: {
           labels: timeLabels,
           datasets: [
-            {
-              label: 'Publicados',
-              data: rnd(18, 12),
-              borderColor: '#38bdf8',
-              backgroundColor: 'rgba(56,189,248,0.08)',
-              tension: 0.4,
-              fill: true,
-              pointRadius: 3,
-              pointBackgroundColor: '#38bdf8',
-              borderWidth: 2,
-            },
-            {
-              label: 'Recibidos',
-              data: rnd(14, 10),
-              borderColor: '#818cf8',
-              backgroundColor: 'rgba(129,140,248,0.06)',
-              tension: 0.4,
-              fill: true,
-              pointRadius: 3,
-              pointBackgroundColor: '#818cf8',
-              borderDash: [4, 3],
-              borderWidth: 2,
-            },
+            { label: 'Publicados', data: rnd(18, 12), borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,0.08)', tension: 0.4, fill: true, pointRadius: 3, pointBackgroundColor: '#38bdf8', borderWidth: 2 },
+            { label: 'Recibidos', data: rnd(14, 10), borderColor: '#818cf8', backgroundColor: 'rgba(129,140,248,0.06)', tension: 0.4, fill: true, pointRadius: 3, pointBackgroundColor: '#818cf8', borderDash: [4, 3], borderWidth: 2 },
           ],
         },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: {
-              ticks: { color: '#64748b', font: { size: 10 }, autoSkip: true, maxRotation: 0 },
-              grid: { color: 'rgba(51,65,85,0.5)' },
-            },
-            y: {
-              ticks: { color: '#64748b', font: { size: 10 } },
-              grid: { color: 'rgba(51,65,85,0.5)' },
-              beginAtZero: true,
-            },
-          },
-        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#64748b', font: { size: 10 }, autoSkip: true, maxRotation: 0 }, grid: { color: 'rgba(51,65,85,0.5)' } }, y: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: 'rgba(51,65,85,0.5)' }, beginAtZero: true } } },
       })
 
-      // HTTP chart
       if (httpChartInst.current) httpChartInst.current.destroy()
       httpChartInst.current = new Chart(httpChartRef.current, {
         type: 'bar',
         data: {
           labels: timeLabels,
           datasets: [
-            {
-              label: 'Supabase REST',
-              data: rnd(24, 16),
-              backgroundColor: 'rgba(74,222,128,0.75)',
-              borderRadius: 4,
-            },
-            {
-              label: 'Auth requests',
-              data: rnd(8, 6),
-              backgroundColor: 'rgba(253,224,71,0.7)',
-              borderRadius: 4,
-            },
+            { label: 'Supabase REST', data: rnd(24, 16), backgroundColor: 'rgba(74,222,128,0.75)', borderRadius: 4 },
+            { label: 'Auth requests', data: rnd(8, 6), backgroundColor: 'rgba(253,224,71,0.7)', borderRadius: 4 },
           ],
         },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: {
-              stacked: true,
-              ticks: { color: '#64748b', font: { size: 10 }, autoSkip: true, maxRotation: 0 },
-              grid: { color: 'rgba(51,65,85,0.5)' },
-            },
-            y: {
-              stacked: true,
-              ticks: { color: '#64748b', font: { size: 10 } },
-              grid: { color: 'rgba(51,65,85,0.5)' },
-              beginAtZero: true,
-            },
-          },
-        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { stacked: true, ticks: { color: '#64748b', font: { size: 10 }, autoSkip: true, maxRotation: 0 }, grid: { color: 'rgba(51,65,85,0.5)' } }, y: { stacked: true, ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: 'rgba(51,65,85,0.5)' }, beginAtZero: true } } },
       })
 
-      // LED doughnut
-      if (ledChartInst.current) ledChartInst.current.destroy()
-      ledChartInst.current = new Chart(ledChartRef.current, {
+      const doughnutConfig = {
         type: 'doughnut',
-        data: {
-          labels: ['Encendidos', 'Apagados'],
-          datasets: [
-            {
-              data: [0, 1],
-              backgroundColor: ['#fde047', '#334155'],
-              borderWidth: 0,
-              hoverOffset: 4,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          cutout: '72%',
-          plugins: { legend: { display: false } },
-        },
-      })
+        data: { labels: ['Encendidos', 'Apagados'], datasets: [{ data: [0, 1], backgroundColor: ['#fde047', '#334155'], borderWidth: 0, hoverOffset: 4 }] },
+        options: { responsive: true, maintainAspectRatio: false, cutout: '72%', plugins: { legend: { display: false } } },
+      }
+
+      if (ledChartInst.current) ledChartInst.current.destroy()
+      ledChartInst.current = new Chart(ledChartRef.current, { ...doughnutConfig, data: JSON.parse(JSON.stringify(doughnutConfig.data)) })
 
       if (ledChartInst2.current) ledChartInst2.current.destroy()
-      ledChartInst2.current = new Chart(ledChartRef2.current, {
-        type: 'doughnut',
-        data: {
-          labels: ['Encendidos', 'Apagados'],
-          datasets: [
-            {
-              data: [0, 1],
-              backgroundColor: ['#fde047', '#334155'],
-              borderWidth: 0,
-              hoverOffset: 4,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          cutout: '72%',
-          plugins: { legend: { display: false } },
-        },
-      })
+      ledChartInst2.current = new Chart(ledChartRef2.current, { ...doughnutConfig, data: JSON.parse(JSON.stringify(doughnutConfig.data)) })
 
       if (ledChartInst3.current) ledChartInst3.current.destroy()
-      ledChartInst3.current = new Chart(ledChartRef3.current, {
-        type: 'doughnut',
-        data: {
-          labels: ['Encendidos', 'Apagados'],
-          datasets: [
-            {
-              data: [0, 1],
-              backgroundColor: ['#fde047', '#334155'],
-              borderWidth: 0,
-              hoverOffset: 4,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          cutout: '72%',
-          plugins: { legend: { display: false } },
-        },
-      })
+      ledChartInst3.current = new Chart(ledChartRef3.current, { ...doughnutConfig, data: JSON.parse(JSON.stringify(doughnutConfig.data)) })
 
-
-
-      // Animación de tráfico en tiempo real
       if (chartsInterval.current) clearInterval(chartsInterval.current)
       chartsInterval.current = setInterval(() => {
         if (mqttChartInst.current) {
@@ -474,37 +232,26 @@ export default function Dashboard() {
     }
   }, [])
 
-  // Actualizar gráfica LED cuando cambian los contadores
   useEffect(() => {
     if (ledChartInst.current) {
-      ledChartInst.current.data.datasets[0].data = [
-        ledOnCount,
-        Math.max(ledOffCount, ledOnCount === 0 ? 1 : 0),
-      ]
+      ledChartInst.current.data.datasets[0].data = [ledOnCount, Math.max(ledOffCount, ledOnCount === 0 ? 1 : 0)]
       ledChartInst.current.update()
     }
   }, [ledOnCount, ledOffCount])
 
-   useEffect(() => {
+  useEffect(() => {
     if (ledChartInst2.current) {
-      ledChartInst2.current.data.datasets[0].data = [
-        ledOnCount2,
-        Math.max(ledOffCount2, ledOnCount2 === 0 ? 1 : 0),
-      ]
+      ledChartInst2.current.data.datasets[0].data = [ledOnCount2, Math.max(ledOffCount2, ledOnCount2 === 0 ? 1 : 0)]
       ledChartInst2.current.update()
     }
   }, [ledOnCount2, ledOffCount2])
 
   useEffect(() => {
     if (ledChartInst3.current) {
-      ledChartInst3.current.data.datasets[0].data = [
-        ledOnCount3,
-        Math.max(ledOffCount3, ledOnCount3 === 0 ? 1 : 0),
-      ]
+      ledChartInst3.current.data.datasets[0].data = [ledOnCount3, Math.max(ledOffCount3, ledOnCount3 === 0 ? 1 : 0)]
       ledChartInst3.current.update()
     }
   }, [ledOnCount3, ledOffCount3])
-
 
   const cargarMiembros = async () => {
     const { data } = await supabase.from('miembros').select('*').order('orden')
@@ -514,13 +261,9 @@ export default function Dashboard() {
   const abrirEdicion = (m) => {
     setEditandoMiembro(m.id)
     setEditForm({
-      nombre: m.nombre || '',
-      rol: m.rol || '',
-      foto_url: m.foto_url || '',
-      descripcion: m.descripcion || '',
-      correo: m.correo || '',
-      red_social: m.red_social || '',
-      red_social_url: m.red_social_url || '',
+      nombre: m.nombre || '', rol: m.rol || '', foto_url: m.foto_url || '',
+      descripcion: m.descripcion || '', correo: m.correo || '',
+      red_social: m.red_social || '', red_social_url: m.red_social_url || '',
     })
   }
 
@@ -539,30 +282,19 @@ export default function Dashboard() {
   const subirFotoGrupo = async (e) => {
     const file = e.target.files[0]
     if (!file) return
-    // Usar un nombre fijo para que siempre se sobreescriba la misma clave
-    const fileName = `foto_grupo.jpg`
-    // Intentar subir al bucket 'grupo' y, si no existe, usar 'miembros' como respaldo
-    let bucket = 'grupo'
-    let resp = await supabase.storage.from(bucket).upload(fileName, file, { upsert: true })
-    if (resp.error && resp.error.message && resp.error.message.includes('Bucket not found')) {
-      console.warn("Bucket 'grupo' no encontrado, intentando 'miembros' como respaldo")
-      bucket = 'miembros'
-      resp = await supabase.storage.from(bucket).upload(fileName, file, { upsert: true })
-    }
-    if (!resp.error) {
-      const { data } = supabase.storage.from(bucket).getPublicUrl(fileName)
+    const { error } = await supabase.storage.from('miembros').upload('foto_grupo.jpg', file, { upsert: true })
+    if (!error) {
+      const { data } = supabase.storage.from('miembros').getPublicUrl('foto_grupo.jpg')
       setGrupoFotoUrl(data.publicUrl + '?t=' + Date.now())
     } else {
-      console.error('Error subiendo foto de grupo:', resp.error)
-      alert('No se pudo subir la foto del grupo. Revisa la consola para más detalles.')
+      alert('Error al subir la foto: ' + error.message)
     }
   }
 
   const guardarMiembro = async () => {
     setGuardando(true)
     await supabase.from('miembros').update({
-      nombre: editForm.nombre,
-      rol: editForm.rol,
+      nombre: editForm.nombre, rol: editForm.rol,
       foto_url: editForm.foto_url || null,
       descripcion: editForm.descripcion || null,
       correo: editForm.correo || null,
@@ -580,38 +312,21 @@ export default function Dashboard() {
   }
 
   const handleToggle = (idBombillo) => {
-  // 💡 Generamos la hora exacta en formato legible (ej: "11:26:59 AM")
-  const currentTimestamp = new Date().toLocaleTimeString();
-
-  let topic = '';
-  let newState = false;
-
+  const currentTimestamp = new Date().toLocaleTimeString()
+  let topic = '', newState = false
   if (idBombillo === 1) {
-    newState = !ledOn;
-    setLedOn(newState);
-    topic = 'led1/control';
-    if (newState) setLedOnCount(c => c + 1); else setLedOffCount(c => c + 1);
+    newState = !ledOn; setLedOn(newState); topic = 'led1/control'
+    if (newState) setLedOnCount(c => c + 1); else setLedOffCount(c => c + 1)
   } else if (idBombillo === 2) {
-    newState = !ledOn2;
-    setLedOn2(newState);
-    topic = 'led2/control';
-    if (newState) setLedOnCount2(c => c + 1); else setLedOffCount2(c => c + 1);
+    newState = !ledOn2; setLedOn2(newState); topic = 'led2/control'
+    if (newState) setLedOnCount2(c => c + 1); else setLedOffCount2(c => c + 1)
   } else if (idBombillo === 3) {
-    newState = !ledOn3;
-    setLedOn3(newState);
-    topic = 'led3/control';
-    if (newState) setLedOnCount3(c => c + 1); else setLedOffCount3(c => c + 1);
+    newState = !ledOn3; setLedOn3(newState); topic = 'led3/control'
+    if (newState) setLedOnCount3(c => c + 1); else setLedOffCount3(c => c + 1)
   }
-
-  // 💡 Creamos el paquete JSON estructurado
-  const payload = JSON.stringify({
-    status: newState ? 'ON' : 'OFF',
-    timestamp: currentTimestamp
-  });
-
-  // Enviamos el JSON al broker MQTT
-  client.publish(topic, payload);
+  client.publish(topic, newState ? 'ON' : 'OFF')
 }
+
   const guardarMqttConfig = () => {
     localStorage.setItem('mqttConfig', JSON.stringify(tempMqttConfig))
     setMqttConfig(tempMqttConfig)
@@ -630,10 +345,10 @@ export default function Dashboard() {
   const apellido = perfil?.apellido || ''
   const iniciales = (nombre[0] + (apellido[0] || nombre[1] || '')).toUpperCase()
   const fotoUrl = perfil?.foto_url
-
   const progress = Math.min(scrollY / 3, 100)
   const progress2 = Math.min(scrollY / 5, 100)
   const progress3 = Math.min(scrollY / 4, 100)
+  const SIDEBAR_WIDTH = 260
 
   const navItems = [
     { id: 'dashboard', icon: '⊞', label: 'Dashboard' },
@@ -662,37 +377,19 @@ export default function Dashboard() {
   const colores = ['#38bdf8', '#4ade80', '#a78bfa', '#fb923c', '#f472b6', '#fde047']
 
   const redesSociales = [
-    { label: 'Instagram', icon: '📸' },
-    { label: 'LinkedIn', icon: '💼' },
-    { label: 'GitHub', icon: '🐙' },
-    { label: 'Twitter/X', icon: '🐦' },
-    { label: 'Facebook', icon: '👤' },
-    { label: 'TikTok', icon: '🎵' },
+    { label: 'Instagram', icon: '📸' }, { label: 'LinkedIn', icon: '💼' },
+    { label: 'GitHub', icon: '🐙' }, { label: 'Twitter/X', icon: '🐦' },
+    { label: 'Facebook', icon: '👤' }, { label: 'TikTok', icon: '🎵' },
   ]
 
-  const SIDEBAR_WIDTH = 260
-
-  // ╔═══════════════════════════════════════════════════════════════════════════════╗
-  // ║                         🎨 RENDERIZADO PRINCIPAL                             ║
-  // ║                                                                               ║
-  // ║  Estructura principal del dashboard. Los estilos puedes cambiarlos            ║
-  // ║  usando los valores de DESIGN_CONFIG o directamente en los estilos inline   ║
-  // ╚═══════════════════════════════════════════════════════════════════════════════╝
   return (
-    // Contenedor principal - Flex para layout horizontal
-    // height: '100vh' = altura de toda la pantalla
-    // overflow: 'hidden' = sin scroll, todo debe caber
-    // background: theme.sidebar = color de fondo (cambia con tema)
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', fontFamily: 'system-ui, sans-serif', background: theme.sidebar, transition: 'all 0.5s ease' }}>
 
       {isMobile && sidebarOpen && (
-        <div
-          onClick={() => setSidebarOpen(false)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 40, backdropFilter: 'blur(2px)' }}
-        />
+        <div onClick={() => setSidebarOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 40, backdropFilter: 'blur(2px)' }} />
       )}
 
-      {/* 🎨 MODAL EDITAR PERFIL - Cambiar colores y tamaños aquí */}
+      {/* Modal editar miembro */}
       {editandoMiembro && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', overflowY: 'auto' }}>
           <div style={{ background: 'white', borderRadius: '20px', padding: '32px', width: '100%', maxWidth: '440px', margin: 'auto' }}>
@@ -743,23 +440,78 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ======= SIDEBAR ======= */}
-      <div style={{
-        position: isMobile ? 'fixed' : 'relative',
-        left: 0,
-        top: 0,
-        height: '100vh',
-        width: `${SIDEBAR_WIDTH}px`,
-        flexShrink: 0,
-        background: theme.sidebar,
-        borderRight: `1px solid ${ledOn ? '#1a1a1a' : '#1e293b'}`,
-        transform: isMobile ? (sidebarOpen ? 'translateX(0)' : 'translateX(-100%)') : 'translateX(0)',
-        transition: 'transform 0.3s ease, background 0.5s ease',
-        zIndex: 50,
-        display: 'flex',
-        flexDirection: 'column',
-        padding: '0',
-      }}>
+      {/* Modal editar MQTT */}
+      {editandoMqtt && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', overflowY: 'auto' }}>
+          <div style={{ background: theme.card, borderRadius: '20px', padding: '32px', width: '100%', maxWidth: '440px', margin: 'auto', border: `1px solid ${theme.border}` }}>
+            <div style={{ fontSize: '18px', fontWeight: '600', color: theme.text, marginBottom: '24px' }}>⚙️ Configurar MQTT</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {[
+                { label: 'Host del broker', key: 'host', placeholder: 'broker.hivemq.cloud' },
+                { label: 'Puerto', key: 'port', placeholder: '8884', type: 'number' },
+                { label: 'Usuario', key: 'user', placeholder: 'usuario' },
+                { label: 'Contraseña', key: 'pass', placeholder: 'contraseña', type: 'password' },
+              ].map(field => (
+                <div key={field.key}>
+                  <label style={{ fontSize: '13px', color: theme.textMuted, display: 'block', marginBottom: '6px' }}>{field.label}</label>
+                  <input type={field.type || 'text'} value={tempMqttConfig[field.key]} onChange={e => setTempMqttConfig(c => ({ ...c, [field.key]: e.target.value }))} placeholder={field.placeholder} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: `1px solid ${theme.border}`, fontSize: '14px', outline: 'none', boxSizing: 'border-box', background: theme.card, color: theme.text }} />
+                </div>
+              ))}
+              <div>
+                <label style={{ fontSize: '13px', color: theme.textMuted, display: 'block', marginBottom: '6px' }}>Protocolo</label>
+                <select value={tempMqttConfig.protocol} onChange={e => setTempMqttConfig(c => ({ ...c, protocol: e.target.value }))} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: `1px solid ${theme.border}`, fontSize: '14px', outline: 'none', boxSizing: 'border-box', background: theme.card, color: theme.text }}>
+                  <option value="wss">WSS (Seguro)</option>
+                  <option value="ws">WS (WebSocket)</option>
+                  <option value="mqtt">MQTT (TCP)</option>
+                  <option value="mqtts">MQTTS (TCP Seguro)</option>
+                </select>
+              </div>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                <button onClick={() => { setEditandoMqtt(false); setTempMqttConfig(mqttConfig) }} style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${theme.border}`, borderRadius: '8px', fontSize: '14px', cursor: 'pointer', color: theme.textMuted }}>Cancelar</button>
+                <button onClick={guardarMqttConfig} style={{ flex: 1, padding: '12px', background: '#0ea5e9', border: 'none', borderRadius: '8px', fontSize: '14px', cursor: 'pointer', color: 'white', fontWeight: '500' }}>Guardar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal editar HTTP */}
+      {editandoHttp && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', overflowY: 'auto' }}>
+          <div style={{ background: theme.card, borderRadius: '20px', padding: '32px', width: '100%', maxWidth: '440px', margin: 'auto', border: `1px solid ${theme.border}` }}>
+            <div style={{ fontSize: '18px', fontWeight: '600', color: theme.text, marginBottom: '24px' }}>⚙️ Configurar HTTP</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <label style={{ fontSize: '13px', color: theme.textMuted, display: 'block', marginBottom: '6px' }}>Servicio</label>
+                <select value={tempHttpConfig.service} onChange={e => setTempHttpConfig(c => ({ ...c, service: e.target.value }))} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: `1px solid ${theme.border}`, fontSize: '14px', outline: 'none', boxSizing: 'border-box', background: theme.card, color: theme.text }}>
+                  <option value="supabase">Supabase</option>
+                  <option value="firebase">Firebase</option>
+                  <option value="custom">API Personalizada</option>
+                </select>
+              </div>
+              {[
+                { label: 'URL Base', key: 'baseUrl', placeholder: 'https://your-project.supabase.co' },
+                { label: 'API Key / Token', key: 'apiKey', placeholder: 'tu-api-key', type: 'password' },
+              ].map(field => (
+                <div key={field.key}>
+                  <label style={{ fontSize: '13px', color: theme.textMuted, display: 'block', marginBottom: '6px' }}>{field.label}</label>
+                  <input type={field.type || 'text'} value={tempHttpConfig[field.key]} onChange={e => setTempHttpConfig(c => ({ ...c, [field.key]: e.target.value }))} placeholder={field.placeholder} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: `1px solid ${theme.border}`, fontSize: '14px', outline: 'none', boxSizing: 'border-box', background: theme.card, color: theme.text }} />
+                </div>
+              ))}
+              <div style={{ background: theme.sectionBg, padding: '12px', borderRadius: '8px', borderLeft: '3px solid #f59e0b' }}>
+                <div style={{ fontSize: '12px', color: theme.textMuted, lineHeight: '1.6' }}>⚠️ La configuración se guarda localmente. Reinicia la app para aplicar cambios.</div>
+              </div>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                <button onClick={() => { setEditandoHttp(false); setTempHttpConfig(httpConfig) }} style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${theme.border}`, borderRadius: '8px', fontSize: '14px', cursor: 'pointer', color: theme.textMuted }}>Cancelar</button>
+                <button onClick={guardarHttpConfig} style={{ flex: 1, padding: '12px', background: '#0ea5e9', border: 'none', borderRadius: '8px', fontSize: '14px', cursor: 'pointer', color: 'white', fontWeight: '500' }}>Guardar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sidebar */}
+      <div style={{ position: isMobile ? 'fixed' : 'relative', left: 0, top: 0, height: '100vh', width: `${SIDEBAR_WIDTH}px`, flexShrink: 0, background: theme.sidebar, borderRight: `1px solid ${ledOn ? '#1a1a1a' : '#1e293b'}`, transform: isMobile ? (sidebarOpen ? 'translateX(0)' : 'translateX(-100%)') : 'translateX(0)', transition: 'transform 0.3s ease, background 0.5s ease', zIndex: 50, display: 'flex', flexDirection: 'column', padding: '0' }}>
         <div style={{ padding: '20px', borderBottom: `1px solid ${ledOn ? '#1a1a1a' : '#1e293b'}`, display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>⚡</div>
           <div>
@@ -781,24 +533,7 @@ export default function Dashboard() {
         <nav style={{ flex: 1, padding: '12px 0', overflowY: 'auto' }}>
           <div style={{ fontSize: '10px', fontWeight: '600', color: '#475569', letterSpacing: '1px', padding: '8px 20px 4px', textTransform: 'uppercase' }}>Menú</div>
           {navItems.map(item => (
-            <div
-              key={item.id}
-              onClick={() => { setActiveSection(item.id); if (isMobile) setSidebarOpen(false) }}
-              style={{
-                padding: '10px 20px',
-                margin: '2px 8px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                background: activeSection === item.id ? 'linear-gradient(90deg, #0ea5e920, #6366f110)' : 'transparent',
-                borderRadius: '10px',
-                borderLeft: activeSection === item.id ? '3px solid #38bdf8' : '3px solid transparent',
-                cursor: 'pointer',
-                fontSize: '14px',
-                color: activeSection === item.id ? '#f1f5f9' : '#64748b',
-                transition: 'all 0.2s',
-              }}
-            >
+            <div key={item.id} onClick={() => { setActiveSection(item.id); if (isMobile) setSidebarOpen(false) }} style={{ padding: '10px 20px', margin: '2px 8px', display: 'flex', alignItems: 'center', gap: '10px', background: activeSection === item.id ? 'linear-gradient(90deg, #0ea5e920, #6366f110)' : 'transparent', borderRadius: '10px', borderLeft: activeSection === item.id ? '3px solid #38bdf8' : '3px solid transparent', cursor: 'pointer', fontSize: '14px', color: activeSection === item.id ? '#f1f5f9' : '#64748b', transition: 'all 0.2s' }}>
               <span style={{ fontSize: '16px', width: '20px', textAlign: 'center' }}>{item.icon}</span>
               <span>{item.label}</span>
               {activeSection === item.id && <div style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', background: '#38bdf8' }} />}
@@ -819,47 +554,24 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* 🔴 BOTÓN CERRAR SESIÓN */}
         <div style={{ padding: '16px 20px' }}>
-          {/* PERSONALIZACIÓN DE BOTONES:
-              📝 Cambiar colores:
-              - background: 'transparent' → cambiar a '#f87171' para fondo rojo
-              - color: '#f87171' → DESIGN_CONFIG.CHARTS.ERROR_COLOR para rojo
-              📐 Cambiar tamaño:
-              - padding: '9px' → usa DESIGN_CONFIG.BUTTON.PADDING
-              - fontSize: '13px' → usa DESIGN_CONFIG.TYPOGRAPHY.SMALL
-              - borderRadius: '8px' → usa DESIGN_CONFIG.BUTTON.BORDER_RADIUS
-          */}
           <button onClick={handleLogout} style={{ width: '100%', padding: '9px', background: 'transparent', color: '#f87171', border: '1px solid #374151', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
             <span>⎋</span> Cerrar sesión
           </button>
         </div>
       </div>
 
-      {/* ======= MAIN CONTENT ======= */}
+      {/* Main */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
 
         {/* Top bar */}
-        <div style={{
-          flexShrink: 0,
-          background: theme.topbar,
-          backdropFilter: 'blur(8px)',
-          borderBottom: `1px solid ${theme.border}`,
-          padding: '12px 24px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          transition: 'all 0.5s ease',
-          zIndex: 30,
-        }}>
+        <div style={{ flexShrink: 0, background: theme.topbar, backdropFilter: 'blur(8px)', borderBottom: `1px solid ${theme.border}`, padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'all 0.5s ease', zIndex: 30 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             {isMobile && (
               <button onClick={() => setSidebarOpen(true)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '22px', color: theme.text, padding: '4px 8px', borderRadius: '8px' }}>☰</button>
             )}
             <div>
-              <div style={{ fontSize: '18px', fontWeight: '700', color: theme.text, transition: 'color 0.5s ease' }}>
-                {navItems.find(n => n.id === activeSection)?.label}
-              </div>
+              <div style={{ fontSize: '18px', fontWeight: '700', color: theme.text, transition: 'color 0.5s ease' }}>{navItems.find(n => n.id === activeSection)?.label}</div>
               <div style={{ fontSize: '12px', color: theme.textMuted }}>Panel IoT — ESP32</div>
             </div>
           </div>
@@ -880,13 +592,12 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Scrollable content */}
+        {/* Contenido scrollable */}
         <div ref={mainRef} style={{ flex: 1, overflowY: 'auto', background: theme.bg, transition: 'background 0.5s ease' }}>
 
           {/* DASHBOARD */}
           {activeSection === 'dashboard' && (
             <div>
-              {/* Hero video */}
               <div style={{ position: 'relative', height: '100vh', overflow: 'hidden' }}>
                 <video autoPlay muted loop playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.4)' }}>
                   <source src="https://videos.pexels.com/video-files/3129671/3129671-uhd_2560_1440_30fps.mp4" type="video/mp4" />
@@ -902,194 +613,72 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* ===== BLOQUE GRÁFICAS + LED + CARRUSEL ===== */}
+              {/* Gráficas */}
               <div style={{ background: '#0f172a', padding: '60px 20px', borderTop: '1px solid #1e293b' }}>
                 <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-                  <div style={{ fontSize: 'clamp(20px, 3vw, 28px)', fontWeight: '600', color: '#f1f5f9' }}>
-                    Tráfico de red en tiempo real
-                  </div>
-                  <div style={{ color: '#64748b', marginTop: '8px', fontSize: '14px' }}>
-                    Simulación hipotética — MQTT · HTTP · LED
-                  </div>
+                  <div style={{ fontSize: 'clamp(20px, 3vw, 28px)', fontWeight: '600', color: '#f1f5f9' }}>Tráfico de red en tiempo real</div>
+                  <div style={{ color: '#64748b', marginTop: '8px', fontSize: '14px' }}>MQTT · HTTP · LED</div>
                 </div>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0,1fr))', gap: '24px', maxWidth: '900px', margin: '0 auto' }}>
 
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0,1fr))',
-                  gap: '24px',
-                  maxWidth: '900px',
-                  margin: '0 auto',
-                }}>
-
-                  {/* Fila 1, Col 1 — Gráfica MQTT */}
                   <div style={{ background: '#1e293b', borderRadius: '16px', padding: '24px', border: '1px solid #334155' }}>
                     <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px' }}>Protocolo MQTT</div>
                     <div style={{ fontSize: '18px', fontWeight: '600', color: '#f1f5f9', marginBottom: '14px' }}>Mensajes / min</div>
-                    <div style={{ display: 'flex', gap: '16px', marginBottom: '12px', fontSize: '12px', color: '#94a3b8', flexWrap: 'wrap' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                        <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#38bdf8' }} />
-                        Publicados
-                      </span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                        <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#818cf8', border: '1px dashed #818cf8' }} />
-                        Recibidos
-                      </span>
+                    <div style={{ display: 'flex', gap: '16px', marginBottom: '12px', fontSize: '12px', color: '#94a3b8' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#38bdf8' }} />Publicados</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#818cf8' }} />Recibidos</span>
                     </div>
-                    <div style={{ position: 'relative', height: '180px' }}>
-                     <canvas ref={mqttChartRef} />
-                    </div>
+                    <div style={{ position: 'relative', height: '180px' }}><canvas ref={mqttChartRef} /></div>
                   </div>
 
-                  {/* Fila 1, Col 2 — Gráfica HTTP */}
                   <div style={{ background: '#1e293b', borderRadius: '16px', padding: '24px', border: '1px solid #334155' }}>
                     <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px' }}>Protocolo HTTP</div>
                     <div style={{ fontSize: '18px', fontWeight: '600', color: '#f1f5f9', marginBottom: '14px' }}>Solicitudes / min</div>
-                    <div style={{ display: 'flex', gap: '16px', marginBottom: '12px', fontSize: '12px', color: '#94a3b8', flexWrap: 'wrap' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                        <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#4ade80' }} />
-                        Supabase REST
-                      </span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                        <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#fde047' }} />
-                        Auth requests
-                      </span>
+                    <div style={{ display: 'flex', gap: '16px', marginBottom: '12px', fontSize: '12px', color: '#94a3b8' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#4ade80' }} />Supabase REST</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#fde047' }} />Auth requests</span>
                     </div>
-                    <div style={{ position: 'relative', height: '180px' }}>
-                      <canvas ref={httpChartRef} />
-                    </div>
+                    <div style={{ position: 'relative', height: '180px' }}><canvas ref={httpChartRef} /></div>
                   </div>
 
-                  {/* Fila 2, Col 1 — Gráfica circular LED */}
-                 {/* CONTENEDOR PRINCIPAL DE LOS 3 BOMBILLOS */}
-<div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', width: '100%' }}>
+                  {/* Bombillos */}
+                  <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', width: '100%' }}>
+                    {[
+                      { label: 'LED 1 (Sala)', ref: ledChartRef, on: ledOn, onCount: ledOnCount, offCount: ledOffCount, id: 1 },
+                      { label: 'LED 2 (Cocina)', ref: ledChartRef2, on: ledOn2, onCount: ledOnCount2, offCount: ledOffCount2, id: 2 },
+                      { label: 'LED 3 (Patio)', ref: ledChartRef3, on: ledOn3, onCount: ledOnCount3, offCount: ledOffCount3, id: 3 },
+                    ].map(led => (
+                      <div key={led.id} style={{ background: '#1e293b', borderRadius: '16px', padding: '24px', border: '1px solid #334155', display: 'flex', alignItems: 'center', gap: '24px', flex: '1', minWidth: '280px' }}>
+                        <div style={{ flexShrink: 0 }}>
+                          <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '10px' }}>Activaciones {led.label}</div>
+                          <div style={{ position: 'relative', width: '130px', height: '130px' }}>
+                            <canvas ref={led.ref} />
+                            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+                              <span style={{ fontSize: '28px', fontWeight: '700', color: '#fde047', lineHeight: 1 }}>{led.onCount}</span>
+                              <span style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>encendidos</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ marginBottom: '14px' }}>
+                            <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '6px' }}>Estado actual</div>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: led.on ? '#1a2a1a' : 'transparent', border: `1px solid ${led.on ? '#166534' : '#374151'}`, borderRadius: '20px', padding: '4px 12px' }}>
+                              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: led.on ? '#4ade80' : '#475569' }} />
+                              <span style={{ fontSize: '12px', color: led.on ? '#4ade80' : '#475569', fontWeight: '500' }}>{led.on ? 'ON' : 'OFF'}</span>
+                            </div>
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '14px' }}>Apagados: <span style={{ color: '#f1f5f9', fontWeight: '600' }}>{led.offCount}</span></div>
+                          <button onClick={() => handleToggle(led.id)} style={{ padding: '6px 12px', background: led.on ? '#ef4444' : '#22c55e', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>
+                            {led.on ? 'Apagar' : 'Encender'}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
 
-  {/* ================= BOMBILLO 1 (SALA) ================= */}
-  <div style={{ background: '#1e293b', borderRadius: '16px', padding: '24px', border: '1px solid #334155', display: 'flex', alignItems: 'center', gap: '24px', flex: '1', minWidth: '280px' }}>
-    <div style={{ flexShrink: 0 }}>
-      <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '10px' }}>Activaciones LED 1 (Sala)</div>
-      <div style={{ position: 'relative', width: '130px', height: '130px' }}>
-        <canvas ref={ledChartRef} />
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-          <span style={{ fontSize: '28px', fontWeight: '700', color: '#fde047', lineHeight: 1 }}>{ledOnCount}</span>
-          <span style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>encendidos</span>
-        </div>
-      </div>
-    </div>
-    <div style={{ flex: 1, minWidth: '110px' }}>
-      <div style={{ marginBottom: '14px' }}>
-        <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '6px' }}>Estado actual</div>
-        <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: '6px',
-          background: ledOn ? '#1a2a1a' : 'transparent',
-          border: `1px solid ${ledOn ? '#166534' : '#374151'}`,
-          borderRadius: '20px', padding: '4px 12px',
-          transition: 'all 0.3s',
-        }}>
-          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: ledOn ? '#4ade80' : '#475569', transition: 'background 0.3s' }} />
-          <span style={{ fontSize: '12px', color: ledOn ? '#4ade80' : '#475569', fontWeight: '500' }}>{ledOn ? 'ON' : 'OFF'}</span>
-        </div>
-      </div>
-      <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '14px' }}>
-        Apagados: <span style={{ color: '#f1f5f9', fontWeight: '600' }}>{ledOffCount}</span>
-      </div>
-      <button 
-        onClick={() => handleToggle(1)}
-        style={{ padding: '6px 12px', background: ledOn ? '#ef4444' : '#22c55e', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}
-      >
-        {ledOn ? 'Apagar' : 'Encender'}
-      </button>
-    </div>
-  </div>
-
-  {/* ================= BOMBILLO 2 (COCINA) ================= */}
-  <div style={{ background: '#1e293b', borderRadius: '16px', padding: '24px', border: '1px solid #334155', display: 'flex', alignItems: 'center', gap: '24px', flex: '1', minWidth: '280px' }}>
-    <div style={{ flexShrink: 0 }}>
-      <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '10px' }}>Activaciones LED 2 (Cocina)</div>
-      <div style={{ position: 'relative', width: '130px', height: '130px' }}>
-        <canvas ref={ledChartRef2} /> {/* 💡 Cambiado a ledChartRef2 */}
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-          <span style={{ fontSize: '28px', fontWeight: '700', color: '#fde047', lineHeight: 1 }}>{ledOnCount2}</span> {/* 💡 Cambiado a ledOnCount2 */}
-          <span style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>encendidos</span>
-        </div>
-      </div>
-    </div>
-    <div style={{ flex: 1, minWidth: '110px' }}>
-      <div style={{ marginBottom: '14px' }}>
-        <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '6px' }}>Estado actual</div>
-        <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: '6px',
-          background: ledOn2 ? '#1a2a1a' : 'transparent',
-          border: `1px solid ${ledOn2 ? '#166534' : '#374151'}`,
-          borderRadius: '20px', padding: '4px 12px',
-          transition: 'all 0.3s',
-        }}>
-          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: ledOn2 ? '#4ade80' : '#475569', transition: 'background 0.3s' }} />
-          <span style={{ fontSize: '12px', color: ledOn2 ? '#4ade80' : '#475569', fontWeight: '500' }}>{ledOn2 ? 'ON' : 'OFF'}</span> {/* 💡 Cambiado a ledOn2 */}
-        </div>
-      </div>
-      <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '14px' }}>
-        Apagados: <span style={{ color: '#f1f5f9', fontWeight: '600' }}>{ledOffCount2}</span> {/* 💡 Cambiado a ledOffCount2 */}
-      </div>
-      <button 
-        onClick={() => handleToggle(2)} 
-        style={{ padding: '6px 12px', background: ledOn2 ? '#ef4444' : '#22c55e', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}
-      >
-        {ledOn2 ? 'Apagar' : 'Encender'}
-      </button>
-    </div>
-  </div>
-
-  {/* ================= BOMBILLO 3 (PATIO) ================= */}
-  <div style={{ background: '#1e293b', borderRadius: '16px', padding: '24px', border: '1px solid #334155', display: 'flex', alignItems: 'center', gap: '24px', flex: '1', minWidth: '280px' }}>
-    <div style={{ flexShrink: 0 }}>
-      <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '10px' }}>Activaciones LED 3 (Patio)</div>
-      <div style={{ position: 'relative', width: '130px', height: '130px' }}>
-        <canvas ref={ledChartRef3} /> {/* 💡 Cambiado a ledChartRef3 */}
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-          <span style={{ fontSize: '28px', fontWeight: '700', color: '#fde047', lineHeight: 1 }}>{ledOnCount3}</span> {/* 💡 Cambiado a ledOnCount3 */}
-          <span style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>encendidos</span>
-        </div>
-      </div>
-    </div>
-    <div style={{ flex: 1, minWidth: '110px' }}>
-      <div style={{ marginBottom: '14px' }}>
-        <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '6px' }}>Estado actual</div>
-        <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: '6px',
-          background: ledOn3 ? '#1a2a1a' : 'transparent',
-          border: `1px solid ${ledOn3 ? '#166534' : '#374151'}`,
-          borderRadius: '20px', padding: '4px 12px',
-          transition: 'all 0.3s',
-        }}>
-          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: ledOn3 ? '#4ade80' : '#475569', transition: 'background 0.3s' }} />
-          <span style={{ fontSize: '12px', color: ledOn3 ? '#4ade80' : '#475569', fontWeight: '500' }}>{ledOn3 ? 'ON' : 'OFF'}</span> {/* 💡 Cambiado a ledOn3 */}
-        </div>
-      </div>
-      <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '14px' }}>
-        Apagados: <span style={{ color: '#f1f5f9', fontWeight: '600' }}>{ledOffCount3}</span> {/* 💡 Cambiado a ledOffCount3 */}
-      </div>
-      <button 
-        onClick={() => handleToggle(3)} 
-        style={{ padding: '6px 12px', background: ledOn3 ? '#ef4444' : '#22c55e', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}
-      >
-        {ledOn3 ? 'Apagar' : 'Encender'}
-      </button>
-    </div>
-  </div>
-
-</div>
-                  {/* Fila 2, Col 2 — Carrusel */}
+                  {/* Carrusel */}
                   <div style={{ background: '#1e293b', borderRadius: '16px', padding: '20px', border: '1px solid #334155' }}>
-                    <div style={{
-                      background: carruselCards[carruselIndex].bg,
-                      borderRadius: '14px',
-                      padding: '28px 20px',
-                      border: `1px solid ${carruselCards[carruselIndex].color}33`,
-                      textAlign: 'center',
-                      minHeight: '165px',
-                      transition: 'all 0.4s ease',
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                    }}>
+                    <div style={{ background: carruselCards[carruselIndex].bg, borderRadius: '14px', padding: '28px 20px', border: `1px solid ${carruselCards[carruselIndex].color}33`, textAlign: 'center', minHeight: '165px', transition: 'all 0.4s ease', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                       <div style={{ fontSize: '42px', marginBottom: '12px' }}>{carruselCards[carruselIndex].icon}</div>
                       <div style={{ fontSize: '16px', fontWeight: '600', color: carruselCards[carruselIndex].color, marginBottom: '8px' }}>{carruselCards[carruselIndex].title}</div>
                       <div style={{ fontSize: '13px', color: '#94a3b8', lineHeight: '1.6' }}>{carruselCards[carruselIndex].desc}</div>
@@ -1107,7 +696,6 @@ export default function Dashboard() {
 
                 </div>
               </div>
-              {/* ===== FIN BLOQUE GRÁFICAS ===== */}
 
               {/* Stats */}
               <div style={{ background: '#0f172a', padding: '60px 20px', borderTop: '1px solid #1e293b' }}>
@@ -1132,7 +720,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* 💡 CONTROL LED - Personalización de diseño */}
+              {/* Control LED */}
               <div style={{ background: theme.sectionBg, padding: '80px 20px', transition: 'background 0.5s ease' }}>
                 <div style={{ maxWidth: '480px', margin: '0 auto' }}>
                   <div style={{ textAlign: 'center', marginBottom: '40px' }}>
@@ -1140,319 +728,79 @@ export default function Dashboard() {
                     <div style={{ color: theme.textMuted, marginTop: '8px' }}>ESP32 — GPIO 2</div>
                   </div>
                   <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                    {/* Bombillo 1 */}
-                    <div style={{ background: theme.card, borderRadius: '16px', padding: '20px', width: '220px', textAlign: 'center', border: `1px solid ${theme.border}`, boxShadow: ledOn ? '0 0 40px rgba(253,224,71,0.25)' : 'none', transition: 'all 0.4s ease' }}>
-                      <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: ledOn ? '#fef9c3' : '#f1f5f9', margin: '0 auto 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', transition: 'all 0.3s ease', boxShadow: ledOn ? '0 0 30px #fde04733' : 'none' }}>💡</div>
-                      <div style={{ fontSize: '14px', fontWeight: '600', color: ledOn ? '#ca8a04' : theme.textMuted, marginBottom: '12px' }}>Bombillo 1</div>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
-                        <span style={{ fontSize: '12px', color: theme.textMuted }}>OFF</span>
-                        <div onClick={() => handleToggle(1)} style={{ width: '64px', height: '32px', background: ledOn ? '#38bdf8' : '#cbd5e1', borderRadius: '16px', cursor: 'pointer', position: 'relative', transition: 'background 0.25s ease' }}>
-                          <div style={{ width: '24px', height: '24px', background: 'white', borderRadius: '50%', position: 'absolute', top: '4px', left: ledOn ? '36px' : '4px', transition: 'left 0.25s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.15)' }} />
+                    {[
+                      { label: 'Bombillo 1', on: ledOn, id: 1 },
+                      { label: 'Bombillo 2', on: ledOn2, id: 2 },
+                      { label: 'Bombillo 3', on: ledOn3, id: 3 },
+                    ].map(b => (
+                      <div key={b.id} style={{ background: theme.card, borderRadius: '16px', padding: '20px', width: '220px', textAlign: 'center', border: `1px solid ${theme.border}`, boxShadow: b.on ? '0 0 40px rgba(253,224,71,0.25)' : 'none', transition: 'all 0.4s ease' }}>
+                        <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: b.on ? '#fef9c3' : '#f1f5f9', margin: '0 auto 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', transition: 'all 0.3s ease', boxShadow: b.on ? '0 0 30px #fde04733' : 'none' }}>💡</div>
+                        <div style={{ fontSize: '14px', fontWeight: '600', color: b.on ? '#ca8a04' : theme.textMuted, marginBottom: '12px' }}>{b.label}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+                          <span style={{ fontSize: '12px', color: theme.textMuted }}>OFF</span>
+                          <div onClick={() => handleToggle(b.id)} style={{ width: '64px', height: '32px', background: b.on ? '#38bdf8' : '#cbd5e1', borderRadius: '16px', cursor: 'pointer', position: 'relative', transition: 'background 0.25s ease' }}>
+                            <div style={{ width: '24px', height: '24px', background: 'white', borderRadius: '50%', position: 'absolute', top: '4px', left: b.on ? '36px' : '4px', transition: 'left 0.25s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.15)' }} />
+                          </div>
+                          <span style={{ fontSize: '12px', color: theme.textMuted }}>ON</span>
                         </div>
-                        <span style={{ fontSize: '12px', color: theme.textMuted }}>ON</span>
                       </div>
-                    </div>
-
-                    {/* Bombillo 2 */}
-                    <div style={{ background: theme.card, borderRadius: '16px', padding: '20px', width: '220px', textAlign: 'center', border: `1px solid ${theme.border}`, boxShadow: ledOn2 ? '0 0 40px rgba(253,224,71,0.25)' : 'none', transition: 'all 0.4s ease' }}>
-                      <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: ledOn2 ? '#fef9c3' : '#f1f5f9', margin: '0 auto 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', transition: 'all 0.3s ease', boxShadow: ledOn2 ? '0 0 30px #fde04733' : 'none' }}>💡</div>
-                      <div style={{ fontSize: '14px', fontWeight: '600', color: ledOn2 ? '#ca8a04' : theme.textMuted, marginBottom: '12px' }}>Bombillo 2</div>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
-                        <span style={{ fontSize: '12px', color: theme.textMuted }}>OFF</span>
-                        <div onClick={() => handleToggle(2)} style={{ width: '64px', height: '32px', background: ledOn2 ? '#38bdf8' : '#cbd5e1', borderRadius: '16px', cursor: 'pointer', position: 'relative', transition: 'background 0.25s ease' }}>
-                          <div style={{ width: '24px', height: '24px', background: 'white', borderRadius: '50%', position: 'absolute', top: '4px', left: ledOn2 ? '36px' : '4px', transition: 'left 0.25s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.15)' }} />
-                        </div>
-                        <span style={{ fontSize: '12px', color: theme.textMuted }}>ON</span>
-                      </div>
-                    </div>
-
-                    {/* Bombillo 3 */}
-                    <div style={{ background: theme.card, borderRadius: '16px', padding: '20px', width: '220px', textAlign: 'center', border: `1px solid ${theme.border}`, boxShadow: ledOn3 ? '0 0 40px rgba(253,224,71,0.25)' : 'none', transition: 'all 0.4s ease' }}>
-                      <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: ledOn3 ? '#fef9c3' : '#f1f5f9', margin: '0 auto 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', transition: 'all 0.3s ease', boxShadow: ledOn3 ? '0 0 30px #fde04733' : 'none' }}>💡</div>
-                      <div style={{ fontSize: '14px', fontWeight: '600', color: ledOn3 ? '#ca8a04' : theme.textMuted, marginBottom: '12px' }}>Bombillo 3</div>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
-                        <span style={{ fontSize: '12px', color: theme.textMuted }}>OFF</span>
-                        <div onClick={() => handleToggle(3)} style={{ width: '64px', height: '32px', background: ledOn3 ? '#38bdf8' : '#cbd5e1', borderRadius: '16px', cursor: 'pointer', position: 'relative', transition: 'background 0.25s ease' }}>
-                          <div style={{ width: '24px', height: '24px', background: 'white', borderRadius: '50%', position: 'absolute', top: '4px', left: ledOn3 ? '36px' : '4px', transition: 'left 0.25s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.15)' }} />
-                        </div>
-                        <span style={{ fontSize: '12px', color: theme.textMuted }}>ON</span>
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
               </div>
             </div>
           )}
 
-       {/* CONEXIÓN */}
-{activeSection === 'mqtt' && (
-  <div style={{ padding: '40px 20px', maxWidth: '600px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-
-    {/* ◈ SECCIÓN MQTT */}
-    <div style={{ background: theme.card, borderRadius: '16px', padding: '32px', border: `1px solid ${theme.border}`, transition: 'all 0.5s ease' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '22px' }}>◈</span>
-          <div style={{ fontSize: '18px', fontWeight: '600', color: theme.text }}>Conexión MQTT</div>
-        </div>
-        {/* 🔵 BOTÓN EDITAR MQTT - Personalización:
-            - background: '#0ea5e9' = DESIGN_CONFIG.BUTTON.PRIMARY_COLOR (azul)
-            - padding: '6px 12px' = DESIGN_CONFIG.BUTTON.PADDING pequeño
-            - fontSize: '12px' = DESIGN_CONFIG.TYPOGRAPHY.TINY
-            - borderRadius: '8px' = DESIGN_CONFIG.BUTTON.BORDER_RADIUS
-            - color: 'white' = color del texto
-            Cambiar: background para otro color (rojo: '#f87171', verde: '#4ade80')
-        */}
-        <button onClick={() => setEditandoMqtt(true)} style={{ background: '#0ea5e9', color: 'white', border: 'none', borderRadius: '8px', padding: '6px 12px', fontSize: '12px', cursor: 'pointer', fontWeight: '500' }}>✏️ Editar</button>
-      </div>
-
-      <div style={{ fontSize: '11px', fontWeight: '600', color: theme.textMuted, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px' }}>Broker activo</div>
-      <div style={{ background: ledOn ? '#0a1628' : '#eff6ff', border: '2px solid #0ea5e9', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '20px' }}>☁️</span>
-            <div>
-              <div style={{ fontSize: '14px', fontWeight: '600', color: theme.text }}>{mqttConfig.host}</div>
-              <div style={{ fontSize: '12px', color: theme.textMuted }}>Puerto {mqttConfig.port} · {mqttConfig.protocol.toUpperCase()}</div>
-            </div>
-          </div>
-          <span style={{ fontSize: '12px', background: '#14532d22', border: '1px solid #166534', color: '#22c55e', padding: '3px 10px', borderRadius: '20px' }}>
-            {mqttStatus}
-          </span>
-        </div>
-      </div>
-
-      <div style={{ borderTop: `1px solid ${theme.border}`, paddingTop: '16px' }}>
-        <div style={{ fontSize: '11px', fontWeight: '600', color: theme.textMuted, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px' }}>Detalles</div>
-        {[
-          { label: 'Host', value: mqttConfig.host },
-          { label: 'Puerto', value: mqttConfig.port },
-          { label: 'Usuario', value: mqttConfig.user ? mqttConfig.user.substring(0, 3) + '...' : 'No configurado' },
-          { label: 'Protocolo', value: mqttConfig.protocol.toUpperCase() },
-          { label: 'Topic publicación', value: 'led/control' },
-          { label: 'Topic suscripción', value: 'led/estado' },
-        ].map(item => (
-          <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: `1px solid ${theme.border}` }}>
-            <span style={{ fontSize: '14px', color: theme.textMuted }}>{item.label}</span>
-            <span style={{ fontSize: '14px', fontWeight: '500', color: theme.text }}>{item.value}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-
-    {/* 🌐 SECCIÓN HTTP */}
-    <div style={{ background: theme.card, borderRadius: '16px', padding: '32px', border: `1px solid ${theme.border}`, transition: 'all 0.5s ease' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '22px' }}>🌐</span>
-          <div style={{ fontSize: '18px', fontWeight: '600', color: theme.text }}>Conexión HTTP</div>
-        </div>
-        {/* 🟢 BOTÓN EDITAR HTTP - Personalización:
-            - background: '#0ea5e9' = DESIGN_CONFIG.BUTTON.PRIMARY_COLOR (azul)
-            - Cambiar a: '#4ade80' para verde, '#f59e0b' para naranja, '#f87171' para rojo
-            - padding: '6px 12px' = DESIGN_CONFIG.BUTTON.PADDING pequeño
-            - fontSize: '12px' = DESIGN_CONFIG.TYPOGRAPHY.TINY
-        */}
-        <button onClick={() => setEditandoHttp(true)} style={{ background: '#0ea5e9', color: 'white', border: 'none', borderRadius: '8px', padding: '6px 12px', fontSize: '12px', cursor: 'pointer', fontWeight: '500' }}>✏️ Editar</button>
-      </div>
-
-      <div style={{ fontSize: '11px', fontWeight: '600', color: theme.textMuted, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px' }}>Base de datos activa</div>
-      <div style={{ background: ledOn ? '#0a1628' : '#eff6ff', border: '2px solid #0ea5e9', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '20px' }}>🗄️</span>
-            <div>
-              <div style={{ fontSize: '14px', fontWeight: '600', color: theme.text }}>{httpConfig.service === 'supabase' ? 'Supabase' : 'API Personalizada'}</div>
-              <div style={{ fontSize: '12px', color: theme.textMuted }}>REST API · {httpConfig.baseUrl.includes('supabase') ? 'Auth incluido' : 'Endpoint propio'}</div>
-            </div>
-          </div>
-          <span style={{ fontSize: '12px', background: '#14532d22', border: '1px solid #166534', color: '#22c55e', padding: '3px 10px', borderRadius: '20px' }}>
-            {httpStatus}
-          </span>
-        </div>
-      </div>
-
-      <div style={{ borderTop: `1px solid ${theme.border}`, paddingTop: '16px' }}>
-        <div style={{ fontSize: '11px', fontWeight: '600', color: theme.textMuted, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px' }}>Estado</div>
-        {[
-          { label: 'Internet', value: httpStatus, color: httpStatus.includes('✅') ? '#22c55e' : '#ef4444' },
-          { label: 'Base de datos', value: httpConfig.service === 'supabase' ? 'Supabase ✅' : 'Personalizada', color: '#22c55e' },
-          { label: 'URL Base', value: httpConfig.baseUrl.substring(0, 25) + '...', color: theme.text },
-          { label: 'Protocolo', value: 'HTTPS / REST API' },
-        ].map(item => (
-          <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: `1px solid ${theme.border}` }}>
-            <span style={{ fontSize: '14px', color: theme.textMuted }}>{item.label}</span>
-            <span style={{ fontSize: '14px', fontWeight: '500', color: item.color || theme.text }}>{item.value}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-
-  </div>
-)}
-
-          {/* ╔═══════════════════════════════════════════════════════════════════════════════╗
-              ║              ⚙️ MODAL EDITAR MQTT - Personalización de diseño                ║
-              ║                                                                               ║
-              ║  Cambiar colores del modal:                                                  ║
-              ║  - background: 'rgba(0,0,0,0.6)' → DESIGN_CONFIG.MODAL.OVERLAY_OPACITY    ║
-              ║  - theme.card → fondo del modal                                              ║
-              ║  - borderRadius: '20px' → DESIGN_CONFIG.MODAL.BORDER_RADIUS                ║
-              ║                                                                               ║
-              ║  Cambiar tamaños:                                                            ║
-              ║  - padding: '32px' → DESIGN_CONFIG.MODAL.PADDING                            ║
-              ║  - maxWidth: '440px' → DESIGN_CONFIG.MODAL.MAX_WIDTH                        ║
-              ║  - fontSize: '18px' → DESIGN_CONFIG.TYPOGRAPHY.SUBHEADING (título)         ║
-              ╚═══════════════════════════════════════════════════════════════════════════════╝ */}
-          {editandoMqtt && (
-            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', overflowY: 'auto' }}>
-              <div style={{ background: theme.card, borderRadius: '20px', padding: '32px', width: '100%', maxWidth: '440px', margin: 'auto', border: `1px solid ${theme.border}` }}>
-                <div style={{ fontSize: '18px', fontWeight: '600', color: theme.text, marginBottom: '24px' }}>⚙️ Configurar MQTT</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  {[
-                    { label: 'Host del broker', key: 'host', placeholder: 'broker.hivemq.cloud' },
-                    { label: 'Puerto', key: 'port', placeholder: '8884', type: 'number' },
-                    { label: 'Usuario', key: 'user', placeholder: 'usuario' },
-                    { label: 'Contraseña', key: 'pass', placeholder: 'contraseña', type: 'password' },
-                  ].map(field => (
-                    <div key={field.key}>
-                      {/* 📝 ETIQUETA DEL INPUT */}
-                      <label style={{ fontSize: '13px', color: theme.textMuted, display: 'block', marginBottom: '6px' }}>{field.label}</label>
-                      {/* 📥 INPUT - Cambiar estilos:
-                          - padding: '10px 14px' = DESIGN_CONFIG.INPUT.PADDING
-                          - borderRadius: '8px' = DESIGN_CONFIG.INPUT.BORDER_RADIUS
-                          - fontSize: '14px' = DESIGN_CONFIG.TYPOGRAPHY.BODY
-                          - border: `1px solid ${theme.border}` = color del borde
-                          - background: theme.card = fondo del input
-                      */}
-                      <input 
-                        type={field.type || 'text'}
-                        value={tempMqttConfig[field.key]} 
-                        onChange={e => setTempMqttConfig(c => ({ ...c, [field.key]: e.target.value }))} 
-                        placeholder={field.placeholder} 
-                        style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: `1px solid ${theme.border}`, fontSize: '14px', outline: 'none', boxSizing: 'border-box', background: theme.card, color: theme.text, transition: 'all 0.5s ease' }} 
-                      />
-                    </div>
-                  ))}
-                  <div>
-                    {/* 🔘 SELECT PROTOCOLO */}
-                    <label style={{ fontSize: '13px', color: theme.textMuted, display: 'block', marginBottom: '6px' }}>Protocolo</label>
-                    <select 
-                      value={tempMqttConfig.protocol}
-                      onChange={e => setTempMqttConfig(c => ({ ...c, protocol: e.target.value }))}
-                      style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: `1px solid ${theme.border}`, fontSize: '14px', outline: 'none', boxSizing: 'border-box', background: theme.card, color: theme.text }}
-                    >
-                      <option value="wss">WSS (Seguro - WebSocket)</option>
-                      <option value="ws">WS (WebSocket)</option>
-                      <option value="mqtt">MQTT (TCP)</option>
-                      <option value="mqtts">MQTTS (TCP Seguro)</option>
-                    </select>
+          {/* CONEXIÓN */}
+          {activeSection === 'mqtt' && (
+            <div style={{ padding: '40px 20px', maxWidth: '600px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <div style={{ background: theme.card, borderRadius: '16px', padding: '32px', border: `1px solid ${theme.border}`, transition: 'all 0.5s ease' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '22px' }}>◈</span>
+                    <div style={{ fontSize: '18px', fontWeight: '600', color: theme.text }}>Conexión MQTT</div>
                   </div>
-                  {/* 🔘 GRUPO DE BOTONES MODAL - Personalización:
-                      - gap: '12px' = espacio entre botones (DESIGN_CONFIG.SPACING)
-                      - padding: '12px' = DESIGN_CONFIG.BUTTON.PADDING
-                      - borderRadius: '8px' = DESIGN_CONFIG.BUTTON.BORDER_RADIUS
-                      
-                      BOTÓN CANCELAR:
-                      - background: 'transparent' = fondo transparente
-                      - border: `1px solid ${theme.border}` = borde gris
-                      - color: theme.textMuted = color del texto
-                      
-                      BOTÓN GUARDAR:
-                      - background: '#0ea5e9' = DESIGN_CONFIG.BUTTON.PRIMARY_COLOR (azul)
-                      - Cambiar a: '#4ade80' (verde), '#f87171' (rojo), '#f59e0b' (naranja)
-                      - color: 'white' = color del texto
-                  */}
-                  <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-                    <button 
-                      onClick={() => {
-                        setEditandoMqtt(false)
-                        setTempMqttConfig(mqttConfig)
-                      }} 
-                      style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${theme.border}`, borderRadius: '8px', fontSize: '14px', cursor: 'pointer', color: theme.textMuted }}
-                    >
-                      Cancelar
-                    </button>
-                    <button 
-                      onClick={guardarMqttConfig} 
-                      style={{ flex: 1, padding: '12px', background: '#0ea5e9', border: 'none', borderRadius: '8px', fontSize: '14px', cursor: 'pointer', color: 'white', fontWeight: '500' }}
-                    >
-                      Guardar
-                    </button>
-                  </div>
+                  <button onClick={() => setEditandoMqtt(true)} style={{ background: '#0ea5e9', color: 'white', border: 'none', borderRadius: '8px', padding: '6px 12px', fontSize: '12px', cursor: 'pointer', fontWeight: '500' }}>✏️ Editar</button>
                 </div>
+                {[
+                  { label: 'Host', value: mqttConfig.host },
+                  { label: 'Estado', value: mqttStatus, color: mqttStatus.includes('✅') ? '#22c55e' : '#f59e0b' },
+                  { label: 'Puerto', value: mqttConfig.port },
+                  { label: 'Protocolo', value: mqttConfig.protocol.toUpperCase() },
+                  { label: 'Topic publicación', value: 'led/control' },
+                  { label: 'Topic suscripción', value: 'led/estado' },
+                ].map(item => (
+                  <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: `1px solid ${theme.border}` }}>
+                    <span style={{ fontSize: '14px', color: theme.textMuted }}>{item.label}</span>
+                    <span style={{ fontSize: '14px', fontWeight: '500', color: item.color || theme.text }}>{item.value}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ background: theme.card, borderRadius: '16px', padding: '32px', border: `1px solid ${theme.border}`, transition: 'all 0.5s ease' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '22px' }}>🌐</span>
+                    <div style={{ fontSize: '18px', fontWeight: '600', color: theme.text }}>Conexión HTTP</div>
+                  </div>
+                  <button onClick={() => setEditandoHttp(true)} style={{ background: '#0ea5e9', color: 'white', border: 'none', borderRadius: '8px', padding: '6px 12px', fontSize: '12px', cursor: 'pointer', fontWeight: '500' }}>✏️ Editar</button>
+                </div>
+                {[
+                  { label: 'Internet', value: httpStatus, color: httpStatus.includes('✅') ? '#22c55e' : '#ef4444' },
+                  { label: 'Base de datos', value: 'Supabase ✅', color: '#22c55e' },
+                  { label: 'Autenticación', value: 'Supabase Auth ✅', color: '#22c55e' },
+                  { label: 'Protocolo', value: 'HTTPS / REST API' },
+                ].map(item => (
+                  <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: `1px solid ${theme.border}` }}>
+                    <span style={{ fontSize: '14px', color: theme.textMuted }}>{item.label}</span>
+                    <span style={{ fontSize: '14px', fontWeight: '500', color: item.color || theme.text }}>{item.value}</span>
+                  </div>
+                ))}
               </div>
             </div>
           )}
 
-          {/* 🌐 MODAL EDITAR HTTP */}
-          {editandoHttp && (
-            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', overflowY: 'auto' }}>
-              <div style={{ background: theme.card, borderRadius: '20px', padding: '32px', width: '100%', maxWidth: '440px', margin: 'auto', border: `1px solid ${theme.border}` }}>
-                <div style={{ fontSize: '18px', fontWeight: '600', color: theme.text, marginBottom: '24px' }}>⚙️ Configurar HTTP</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  {/* 🔘 SELECT SERVICIO */}
-                  <div>
-                    <label style={{ fontSize: '13px', color: theme.textMuted, display: 'block', marginBottom: '6px' }}>Servicio</label>
-                    <select 
-                      value={tempHttpConfig.service}
-                      onChange={e => setTempHttpConfig(c => ({ ...c, service: e.target.value }))}
-                      style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: `1px solid ${theme.border}`, fontSize: '14px', outline: 'none', boxSizing: 'border-box', background: theme.card, color: theme.text }}
-                    >
-                      <option value="supabase">Supabase</option>
-                      <option value="firebase">Firebase</option>
-                      <option value="custom">API Personalizada</option>
-                    </select>
-                  </div>
-                  {/* 📥 INPUTS HTTP */}
-                  {[
-                    { label: 'URL Base', key: 'baseUrl', placeholder: 'https://your-project.supabase.co' },
-                    { label: 'API Key / Token', key: 'apiKey', placeholder: 'tu-api-key', type: 'password' },
-                  ].map(field => (
-                    <div key={field.key}>
-                      <label style={{ fontSize: '13px', color: theme.textMuted, display: 'block', marginBottom: '6px' }}>{field.label}</label>
-                      <input 
-                        type={field.type || 'text'}
-                        value={tempHttpConfig[field.key]} 
-                        onChange={e => setTempHttpConfig(c => ({ ...c, [field.key]: e.target.value }))} 
-                        placeholder={field.placeholder} 
-                        style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: `1px solid ${theme.border}`, fontSize: '14px', outline: 'none', boxSizing: 'border-box', background: theme.card, color: theme.text, transition: 'all 0.5s ease' }} 
-                      />
-                    </div>
-                  ))}
-                  {/* ⚠️ CAJA ADVERTENCIA - Personalización:
-                      - background: theme.sectionBg = fondo de sección
-                      - borderLeft: '3px solid #f59e0b' = borde izquierdo naranja (advertencia)
-                      - padding: '12px' = espacio interno
-                      - color: theme.textMuted = color del texto
-                  */}
-                  <div style={{ background: theme.sectionBg, padding: '12px', borderRadius: '8px', borderLeft: '3px solid #f59e0b' }}>
-                    <div style={{ fontSize: '12px', color: theme.textMuted, lineHeight: '1.6' }}>
-                      ⚠️ <strong>Importante:</strong> La configuración se guarda localmente. Reinicia la app para aplicar cambios.
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-                    <button 
-                      onClick={() => {
-                        setEditandoHttp(false)
-                        setTempHttpConfig(httpConfig)
-                      }} 
-                      style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${theme.border}`, borderRadius: '8px', fontSize: '14px', cursor: 'pointer', color: theme.textMuted }}
-                    >
-                      Cancelar
-                    </button>
-                    <button 
-                      onClick={guardarHttpConfig} 
-                      style={{ flex: 1, padding: '12px', background: '#0ea5e9', border: 'none', borderRadius: '8px', fontSize: '14px', cursor: 'pointer', color: 'white', fontWeight: '500' }}
-                    >
-                      Guardar
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
+          {/* QUIÉNES SOMOS */}
           {activeSection === 'quienes' && (
             <div style={{ padding: '40px 20px', maxWidth: '700px', margin: '0 auto' }}>
               <div style={{ background: 'linear-gradient(135deg, #0f172a, #1e3a5f)', borderRadius: '20px', overflow: 'hidden', marginBottom: '32px', border: '1px solid #1e4080' }}>
@@ -1466,7 +814,7 @@ export default function Dashboard() {
                     </div>
                   )}
                   <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, #0f172a 100%)' }} />
-                  <label style={{ position: 'absolute', bottom: '12px', right: '12px', background: 'rgba(14,165,233,0.9)', color: 'white', fontSize: '12px', padding: '6px 12px', borderRadius: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.2)', zIndex: 2 }}>
+                  <label style={{ position: 'absolute', bottom: '12px', right: '12px', background: 'rgba(14,165,233,0.9)', color: 'white', fontSize: '12px', padding: '6px 12px', borderRadius: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', zIndex: 2 }}>
                     📷 {grupoFotoUrl ? 'Cambiar foto' : 'Subir foto'}
                     <input type="file" accept="image/*" onChange={subirFotoGrupo} style={{ display: 'none' }} />
                   </label>
@@ -1496,7 +844,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div style={{ fontSize: '18px', fontWeight: '600', color: theme.text, marginBottom: '8px', textAlign: 'center', transition: 'color 0.5s ease' }}>Nuestro equipo</div>
+              <div style={{ fontSize: '18px', fontWeight: '600', color: theme.text, marginBottom: '8px', textAlign: 'center' }}>Nuestro equipo</div>
               <div style={{ fontSize: '13px', color: theme.textMuted, textAlign: 'center', marginBottom: '24px' }}>Toca cualquier miembro para editar tu perfil</div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -1533,7 +881,7 @@ export default function Dashboard() {
                 ))}
               </div>
 
-              <div style={{ marginTop: '32px', background: theme.card, borderRadius: '16px', padding: '24px', border: `1px solid ${theme.border}`, textAlign: 'center', transition: 'all 0.5s ease' }}>
+              <div style={{ marginTop: '32px', background: theme.card, borderRadius: '16px', padding: '24px', border: `1px solid ${theme.border}`, textAlign: 'center' }}>
                 <div style={{ fontSize: '13px', color: theme.textMuted }}>
                   🏫 <strong style={{ color: theme.text }}>SENA</strong> — Servicio Nacional de Aprendizaje<br />
                   Ficha: <strong style={{ color: '#0ea5e9' }}>3225853</strong>
@@ -1550,7 +898,7 @@ export default function Dashboard() {
                 <div style={{ fontSize: '22px', fontWeight: '700', color: '#f1f5f9', marginBottom: '8px' }}>Soporte Técnico</div>
                 <div style={{ fontSize: '14px', color: '#94a3b8' }}>Estamos aquí para ayudarte</div>
               </div>
-              <div style={{ background: theme.card, borderRadius: '16px', padding: '28px', border: `1px solid ${theme.border}`, transition: 'all 0.5s ease' }}>
+              <div style={{ background: theme.card, borderRadius: '16px', padding: '28px', border: `1px solid ${theme.border}` }}>
                 <div style={{ fontSize: '16px', fontWeight: '600', color: theme.text, marginBottom: '20px' }}>📬 Canales de contacto</div>
                 {[
                   { icon: '📧', label: 'Correo soporte', value: 'pelaezkevin63@gmail.com', color: '#0ea5e9' },
@@ -1566,7 +914,7 @@ export default function Dashboard() {
                   </div>
                 ))}
               </div>
-              <div style={{ background: theme.card, borderRadius: '16px', padding: '28px', border: `1px solid ${theme.border}`, transition: 'all 0.5s ease' }}>
+              <div style={{ background: theme.card, borderRadius: '16px', padding: '28px', border: `1px solid ${theme.border}` }}>
                 <div style={{ fontSize: '16px', fontWeight: '600', color: theme.text, marginBottom: '20px' }}>❓ Preguntas frecuentes</div>
                 {faqs.map((faq, i) => (
                   <div key={i} style={{ borderBottom: `1px solid ${theme.border}` }}>
@@ -1578,7 +926,7 @@ export default function Dashboard() {
                   </div>
                 ))}
               </div>
-              <div style={{ background: theme.card, borderRadius: '16px', padding: '28px', border: `1px solid ${theme.border}`, transition: 'all 0.5s ease' }}>
+              <div style={{ background: theme.card, borderRadius: '16px', padding: '28px', border: `1px solid ${theme.border}` }}>
                 <div style={{ fontSize: '16px', fontWeight: '600', color: theme.text, marginBottom: '20px' }}>🟢 Estado del sistema</div>
                 {[
                   { label: 'App Web', status: '✅ Operativo' },
@@ -1598,13 +946,13 @@ export default function Dashboard() {
           {/* CONFIG */}
           {activeSection === 'config' && (
             <div style={{ padding: '40px 20px', maxWidth: '600px', margin: '0 auto' }}>
-              <div style={{ background: theme.card, borderRadius: '16px', padding: '32px', border: `1px solid ${theme.border}`, transition: 'all 0.5s ease' }}>
+              <div style={{ background: theme.card, borderRadius: '16px', padding: '32px', border: `1px solid ${theme.border}` }}>
                 <div style={{ fontSize: '18px', fontWeight: '500', color: theme.text, marginBottom: '24px' }}>Configuración de perfil</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   {['Nombre', 'Apellido', 'Bio'].map(field => (
                     <div key={field}>
                       <label style={{ fontSize: '13px', color: theme.textMuted, display: 'block', marginBottom: '6px' }}>{field}</label>
-                      <input defaultValue={perfil?.[field.toLowerCase()] || ''} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: `1px solid ${theme.border}`, fontSize: '14px', outline: 'none', boxSizing: 'border-box', background: ledOn ? '#1a1a1a' : 'white', color: theme.text, transition: 'all 0.5s ease' }} />
+                      <input defaultValue={perfil?.[field.toLowerCase()] || ''} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: `1px solid ${theme.border}`, fontSize: '14px', outline: 'none', boxSizing: 'border-box', background: ledOn ? '#1a1a1a' : 'white', color: theme.text }} />
                     </div>
                   ))}
                   <button style={{ marginTop: '8px', padding: '12px', background: '#0ea5e9', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', cursor: 'pointer', fontWeight: '500' }}>
