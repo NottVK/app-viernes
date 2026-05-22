@@ -580,33 +580,37 @@ export default function Dashboard() {
   }
 
   const handleToggle = (idBombillo) => {
+  // 💡 Generamos la hora exacta en formato legible (ej: "11:26:59 AM")
+  const currentTimestamp = new Date().toLocaleTimeString();
+
+  let topic = '';
+  let newState = false;
+
   if (idBombillo === 1) {
-    const newState = !ledOn;
+    newState = !ledOn;
     setLedOn(newState);
-    // 💡 Modificado: 'led1/control' para que coincida exactamente con tu Arduino
-    client.publish('led1/control', newState ? 'ON' : 'OFF'); 
-    
-    if (newState) setLedOnCount(c => c + 1);
-    else setLedOffCount(c => c + 1);
-
+    topic = 'led1/control';
+    if (newState) setLedOnCount(c => c + 1); else setLedOffCount(c => c + 1);
   } else if (idBombillo === 2) {
-    const newState = !ledOn2;
+    newState = !ledOn2;
     setLedOn2(newState);
-    // 💡 Modificado: 'led2/control'
-    client.publish('led2/control', newState ? 'ON' : 'OFF'); 
-    
-    if (newState) setLedOnCount2(c => c + 1);
-    else setLedOffCount2(c => c + 1);
-
+    topic = 'led2/control';
+    if (newState) setLedOnCount2(c => c + 1); else setLedOffCount2(c => c + 1);
   } else if (idBombillo === 3) {
-    const newState = !ledOn3;
+    newState = !ledOn3;
     setLedOn3(newState);
-    // 💡 Modificado: 'led3/control'
-    client.publish('led3/control', newState ? 'ON' : 'OFF'); 
-    
-    if (newState) setLedOnCount3(c => c + 1);
-    else setLedOffCount3(c => c + 1);
+    topic = 'led3/control';
+    if (newState) setLedOnCount3(c => c + 1); else setLedOffCount3(c => c + 1);
   }
+
+  // 💡 Creamos el paquete JSON estructurado
+  const payload = JSON.stringify({
+    status: newState ? 'ON' : 'OFF',
+    timestamp: currentTimestamp
+  });
+
+  // Enviamos el JSON al broker MQTT
+  client.publish(topic, payload);
 }
   const guardarMqttConfig = () => {
     localStorage.setItem('mqttConfig', JSON.stringify(tempMqttConfig))
