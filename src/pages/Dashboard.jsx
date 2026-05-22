@@ -212,7 +212,7 @@ export default function Dashboard() {
   }, [])
 
   useEffect(() => {
-    const { data } = supabase.storage.from('grupo').getPublicUrl('foto_grupo.jpg')
+    const { data } = supabase.storage.from('miembros').getPublicUrl('foto_grupo.jpg')
     if (data?.publicUrl) setGrupoFotoUrl(data.publicUrl)
   }, [])
 
