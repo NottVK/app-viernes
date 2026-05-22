@@ -34,7 +34,7 @@ export default function Login() {
       redirectTo: window.location.origin + '/reset-password',
     })
     if (error) {
-      setForgotMsg('Error al enviar el correo, intenta de nuevo.')
+      setForgotMsg('Error al enviar el correo, intentalo nuevamente.')
     } else {
       setForgotMsg('✅ Revisa tu correo, te enviamos un enlace para restablecer tu contraseña.')
     }
