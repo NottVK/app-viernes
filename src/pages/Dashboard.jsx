@@ -102,6 +102,8 @@ const DESIGN_CONFIG = {
 export default function Dashboard() {
   const navigate = useNavigate()
   const [ledOn, setLedOn] = useState(false)
+   const [ledOn2, setLedOn2] = useState(false)
+   const [ledOn3, setLedOn3] = useState(false)
   const [user, setUser] = useState(null)
   const [perfil, setPerfil] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -119,13 +121,21 @@ export default function Dashboard() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const [ledOnCount, setLedOnCount] = useState(0)
   const [ledOffCount, setLedOffCount] = useState(0)
+   const [ledOnCount2, setLedOnCount2] = useState(0)
+  const [ledOffCount2, setLedOffCount2] = useState(0)
+  const [ledOnCount3, setLedOnCount3] = useState(0)
+  const [ledOffCount3, setLedOffCount3] = useState(0)
   const mainRef = useRef(null)
   const mqttChartRef = useRef(null)
   const httpChartRef = useRef(null)
   const ledChartRef = useRef(null)
   const mqttChartInst = useRef(null)
+  const ledChartRef2 = useRef(null) // 💡 Nueva ref para el Canvas del Bombillo 2
+  const ledChartRef3 = useRef(null) // 💡 Nueva ref para el Canvas del Bombillo 3
   const httpChartInst = useRef(null)
   const ledChartInst = useRef(null)
+  const ledChartInst2 = useRef(null) // 💡 Nueva ref para la Instancia del Bombillo 2
+  const ledChartInst3 = useRef(null) // 💡 Nueva ref para la Instancia del Bombillo 3
   const chartsInterval = useRef(null)
 
   // ╔═══════════════════════════════════════════════════════════════════════════════╗
@@ -226,18 +236,22 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (client.connected) setMqttStatus('Conectado ✅')
-    const handler = (topic, message) => {
-      if (topic === 'led/estado') setLedOn(message.toString() === 'ON')
+    const handlerMqttMessage = (topic, message) => {
+      const msg = message.toString()
+      // Soportar topics: 'led/estado' (legacy), 'led/1/estado', 'led/2/estado', 'led/3/estado'
+      if (topic === 'led/estado' || topic === 'led/1/estado') setLedOn(msg === 'ON')
+      else if (topic === 'led/2/estado') setLedOn2(msg === 'ON')
+      else if (topic === 'led/3/estado') setLedOn3(msg === 'ON')
     }
     const onConnect = () => setMqttStatus('Conectado ✅')
     const onError = () => setMqttStatus('Error ❌')
     const onOffline = () => setMqttStatus('Desconectado ⚠️')
-    client.on('message', handler)
+    client.on('message', handlerMqttMessage)
     client.on('connect', onConnect)
     client.on('error', onError)
     client.on('offline', onOffline)
     return () => {
-      client.off('message', handler)
+      client.off('message', handlerMqttMessage)
       client.off('connect', onConnect)
       client.off('error', onError)
       client.off('offline', onOffline)
@@ -384,6 +398,52 @@ export default function Dashboard() {
         },
       })
 
+      if (ledChartInst2.current) ledChartInst2.current.destroy()
+      ledChartInst2.current = new Chart(ledChartRef2.current, {
+        type: 'doughnut',
+        data: {
+          labels: ['Encendidos', 'Apagados'],
+          datasets: [
+            {
+              data: [0, 1],
+              backgroundColor: ['#fde047', '#334155'],
+              borderWidth: 0,
+              hoverOffset: 4,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '72%',
+          plugins: { legend: { display: false } },
+        },
+      })
+
+      if (ledChartInst3.current) ledChartInst3.current.destroy()
+      ledChartInst3.current = new Chart(ledChartRef3.current, {
+        type: 'doughnut',
+        data: {
+          labels: ['Encendidos', 'Apagados'],
+          datasets: [
+            {
+              data: [0, 1],
+              backgroundColor: ['#fde047', '#334155'],
+              borderWidth: 0,
+              hoverOffset: 4,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '72%',
+          plugins: { legend: { display: false } },
+        },
+      })
+
+
+
       // Animación de tráfico en tiempo real
       if (chartsInterval.current) clearInterval(chartsInterval.current)
       chartsInterval.current = setInterval(() => {
@@ -409,6 +469,8 @@ export default function Dashboard() {
       if (mqttChartInst.current) mqttChartInst.current.destroy()
       if (httpChartInst.current) httpChartInst.current.destroy()
       if (ledChartInst.current) ledChartInst.current.destroy()
+      if (ledChartInst2.current) ledChartInst2.current.destroy()
+      if (ledChartInst3.current) ledChartInst3.current.destroy()
     }
   }, [])
 
@@ -422,6 +484,27 @@ export default function Dashboard() {
       ledChartInst.current.update()
     }
   }, [ledOnCount, ledOffCount])
+
+   useEffect(() => {
+    if (ledChartInst2.current) {
+      ledChartInst2.current.data.datasets[0].data = [
+        ledOnCount2,
+        Math.max(ledOffCount2, ledOnCount2 === 0 ? 1 : 0),
+      ]
+      ledChartInst2.current.update()
+    }
+  }, [ledOnCount2, ledOffCount2])
+
+  useEffect(() => {
+    if (ledChartInst3.current) {
+      ledChartInst3.current.data.datasets[0].data = [
+        ledOnCount3,
+        Math.max(ledOffCount3, ledOnCount3 === 0 ? 1 : 0),
+      ]
+      ledChartInst3.current.update()
+    }
+  }, [ledOnCount3, ledOffCount3])
+
 
   const cargarMiembros = async () => {
     const { data } = await supabase.from('miembros').select('*').order('orden')
@@ -496,14 +579,35 @@ export default function Dashboard() {
     navigate('/login')
   }
 
-  const handleToggle = () => {
-    const newState = !ledOn
-    setLedOn(newState)
-    client.publish('led/control', newState ? 'ON' : 'OFF')
-    if (newState) setLedOnCount(c => c + 1)
-    else setLedOffCount(c => c + 1)
-  }
+  const handleToggle = (idBombillo) => {
+  if (idBombillo === 1) {
+    const newState = !ledOn;
+    setLedOn(newState);
+    // 💡 Modificado: 'led1/control' para que coincida exactamente con tu Arduino
+    client.publish('led1/control', newState ? 'ON' : 'OFF'); 
+    
+    if (newState) setLedOnCount(c => c + 1);
+    else setLedOffCount(c => c + 1);
 
+  } else if (idBombillo === 2) {
+    const newState = !ledOn2;
+    setLedOn2(newState);
+    // 💡 Modificado: 'led2/control'
+    client.publish('led2/control', newState ? 'ON' : 'OFF'); 
+    
+    if (newState) setLedOnCount2(c => c + 1);
+    else setLedOffCount2(c => c + 1);
+
+  } else if (idBombillo === 3) {
+    const newState = !ledOn3;
+    setLedOn3(newState);
+    // 💡 Modificado: 'led3/control'
+    client.publish('led3/control', newState ? 'ON' : 'OFF'); 
+    
+    if (newState) setLedOnCount3(c => c + 1);
+    else setLedOffCount3(c => c + 1);
+  }
+}
   const guardarMqttConfig = () => {
     localStorage.setItem('mqttConfig', JSON.stringify(tempMqttConfig))
     setMqttConfig(tempMqttConfig)
@@ -828,7 +932,7 @@ export default function Dashboard() {
                       </span>
                     </div>
                     <div style={{ position: 'relative', height: '180px' }}>
-                      <canvas ref={mqttChartRef} />
+                     <canvas ref={mqttChartRef} />
                     </div>
                   </div>
 
@@ -852,43 +956,124 @@ export default function Dashboard() {
                   </div>
 
                   {/* Fila 2, Col 1 — Gráfica circular LED */}
-                  <div style={{ background: '#1e293b', borderRadius: '16px', padding: '24px', border: '1px solid #334155', display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
-                    <div style={{ flexShrink: 0 }}>
-                      <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '10px' }}>Activaciones LED</div>
-                      <div style={{ position: 'relative', width: '130px', height: '130px' }}>
-                        <canvas ref={ledChartRef} />
-                        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-                          <span style={{ fontSize: '28px', fontWeight: '700', color: '#fde047', lineHeight: 1 }}>{ledOnCount}</span>
-                          <span style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>encendidos</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div style={{ flex: 1, minWidth: '110px' }}>
-                      <div style={{ marginBottom: '14px' }}>
-                        <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '6px' }}>Estado actual</div>
-                        <div style={{
-                          display: 'inline-flex', alignItems: 'center', gap: '6px',
-                          background: ledOn ? '#1a2a1a' : 'transparent',
-                          border: `1px solid ${ledOn ? '#166534' : '#374151'}`,
-                          borderRadius: '20px', padding: '4px 12px',
-                          transition: 'all 0.3s',
-                        }}>
-                          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: ledOn ? '#4ade80' : '#475569', transition: 'background 0.3s' }} />
-                          <span style={{ fontSize: '12px', color: ledOn ? '#4ade80' : '#475569', fontWeight: '500' }}>{ledOn ? 'ON' : 'OFF'}</span>
-                        </div>
-                      </div>
-                      <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '14px' }}>
-                        Apagados: <span style={{ color: '#f1f5f9', fontWeight: '600' }}>{ledOffCount}</span>
-                      </div>
-                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: '12px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '2px', background: '#fde047' }} />
-                          Encendidos: {ledOnCount}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+                 {/* CONTENEDOR PRINCIPAL DE LOS 3 BOMBILLOS */}
+<div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', width: '100%' }}>
 
+  {/* ================= BOMBILLO 1 (SALA) ================= */}
+  <div style={{ background: '#1e293b', borderRadius: '16px', padding: '24px', border: '1px solid #334155', display: 'flex', alignItems: 'center', gap: '24px', flex: '1', minWidth: '280px' }}>
+    <div style={{ flexShrink: 0 }}>
+      <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '10px' }}>Activaciones LED 1 (Sala)</div>
+      <div style={{ position: 'relative', width: '130px', height: '130px' }}>
+        <canvas ref={ledChartRef} />
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+          <span style={{ fontSize: '28px', fontWeight: '700', color: '#fde047', lineHeight: 1 }}>{ledOnCount}</span>
+          <span style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>encendidos</span>
+        </div>
+      </div>
+    </div>
+    <div style={{ flex: 1, minWidth: '110px' }}>
+      <div style={{ marginBottom: '14px' }}>
+        <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '6px' }}>Estado actual</div>
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: '6px',
+          background: ledOn ? '#1a2a1a' : 'transparent',
+          border: `1px solid ${ledOn ? '#166534' : '#374151'}`,
+          borderRadius: '20px', padding: '4px 12px',
+          transition: 'all 0.3s',
+        }}>
+          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: ledOn ? '#4ade80' : '#475569', transition: 'background 0.3s' }} />
+          <span style={{ fontSize: '12px', color: ledOn ? '#4ade80' : '#475569', fontWeight: '500' }}>{ledOn ? 'ON' : 'OFF'}</span>
+        </div>
+      </div>
+      <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '14px' }}>
+        Apagados: <span style={{ color: '#f1f5f9', fontWeight: '600' }}>{ledOffCount}</span>
+      </div>
+      <button 
+        onClick={() => handleToggle(1)}
+        style={{ padding: '6px 12px', background: ledOn ? '#ef4444' : '#22c55e', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}
+      >
+        {ledOn ? 'Apagar' : 'Encender'}
+      </button>
+    </div>
+  </div>
+
+  {/* ================= BOMBILLO 2 (COCINA) ================= */}
+  <div style={{ background: '#1e293b', borderRadius: '16px', padding: '24px', border: '1px solid #334155', display: 'flex', alignItems: 'center', gap: '24px', flex: '1', minWidth: '280px' }}>
+    <div style={{ flexShrink: 0 }}>
+      <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '10px' }}>Activaciones LED 2 (Cocina)</div>
+      <div style={{ position: 'relative', width: '130px', height: '130px' }}>
+        <canvas ref={ledChartRef2} /> {/* 💡 Cambiado a ledChartRef2 */}
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+          <span style={{ fontSize: '28px', fontWeight: '700', color: '#fde047', lineHeight: 1 }}>{ledOnCount2}</span> {/* 💡 Cambiado a ledOnCount2 */}
+          <span style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>encendidos</span>
+        </div>
+      </div>
+    </div>
+    <div style={{ flex: 1, minWidth: '110px' }}>
+      <div style={{ marginBottom: '14px' }}>
+        <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '6px' }}>Estado actual</div>
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: '6px',
+          background: ledOn2 ? '#1a2a1a' : 'transparent',
+          border: `1px solid ${ledOn2 ? '#166534' : '#374151'}`,
+          borderRadius: '20px', padding: '4px 12px',
+          transition: 'all 0.3s',
+        }}>
+          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: ledOn2 ? '#4ade80' : '#475569', transition: 'background 0.3s' }} />
+          <span style={{ fontSize: '12px', color: ledOn2 ? '#4ade80' : '#475569', fontWeight: '500' }}>{ledOn2 ? 'ON' : 'OFF'}</span> {/* 💡 Cambiado a ledOn2 */}
+        </div>
+      </div>
+      <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '14px' }}>
+        Apagados: <span style={{ color: '#f1f5f9', fontWeight: '600' }}>{ledOffCount2}</span> {/* 💡 Cambiado a ledOffCount2 */}
+      </div>
+      <button 
+        onClick={() => handleToggle(2)} 
+        style={{ padding: '6px 12px', background: ledOn2 ? '#ef4444' : '#22c55e', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}
+      >
+        {ledOn2 ? 'Apagar' : 'Encender'}
+      </button>
+    </div>
+  </div>
+
+  {/* ================= BOMBILLO 3 (PATIO) ================= */}
+  <div style={{ background: '#1e293b', borderRadius: '16px', padding: '24px', border: '1px solid #334155', display: 'flex', alignItems: 'center', gap: '24px', flex: '1', minWidth: '280px' }}>
+    <div style={{ flexShrink: 0 }}>
+      <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '10px' }}>Activaciones LED 3 (Patio)</div>
+      <div style={{ position: 'relative', width: '130px', height: '130px' }}>
+        <canvas ref={ledChartRef3} /> {/* 💡 Cambiado a ledChartRef3 */}
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+          <span style={{ fontSize: '28px', fontWeight: '700', color: '#fde047', lineHeight: 1 }}>{ledOnCount3}</span> {/* 💡 Cambiado a ledOnCount3 */}
+          <span style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>encendidos</span>
+        </div>
+      </div>
+    </div>
+    <div style={{ flex: 1, minWidth: '110px' }}>
+      <div style={{ marginBottom: '14px' }}>
+        <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '6px' }}>Estado actual</div>
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: '6px',
+          background: ledOn3 ? '#1a2a1a' : 'transparent',
+          border: `1px solid ${ledOn3 ? '#166534' : '#374151'}`,
+          borderRadius: '20px', padding: '4px 12px',
+          transition: 'all 0.3s',
+        }}>
+          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: ledOn3 ? '#4ade80' : '#475569', transition: 'background 0.3s' }} />
+          <span style={{ fontSize: '12px', color: ledOn3 ? '#4ade80' : '#475569', fontWeight: '500' }}>{ledOn3 ? 'ON' : 'OFF'}</span> {/* 💡 Cambiado a ledOn3 */}
+        </div>
+      </div>
+      <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '14px' }}>
+        Apagados: <span style={{ color: '#f1f5f9', fontWeight: '600' }}>{ledOffCount3}</span> {/* 💡 Cambiado a ledOffCount3 */}
+      </div>
+      <button 
+        onClick={() => handleToggle(3)} 
+        style={{ padding: '6px 12px', background: ledOn3 ? '#ef4444' : '#22c55e', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}
+      >
+        {ledOn3 ? 'Apagar' : 'Encender'}
+      </button>
+    </div>
+  </div>
+
+</div>
                   {/* Fila 2, Col 2 — Carrusel */}
                   <div style={{ background: '#1e293b', borderRadius: '16px', padding: '20px', border: '1px solid #334155' }}>
                     <div style={{
@@ -950,36 +1135,44 @@ export default function Dashboard() {
                     <div style={{ fontSize: 'clamp(20px, 3vw, 28px)', fontWeight: '600', color: theme.text }}>Control del LED</div>
                     <div style={{ color: theme.textMuted, marginTop: '8px' }}>ESP32 — GPIO 2</div>
                   </div>
-                  {/* 📦 TARJETA LED - Cambiar estilos:
-                      - borderRadius: '24px' → redondez de esquinas
-                      - padding: '40px' → espacio interno de la tarjeta
-                      - background: theme.card → color de fondo
-                      - boxShadow: '0 0 60px rgba(253,224,71,0.3)' → sombra cuando está encendido
-                  */}
-                  <div style={{ background: theme.card, borderRadius: '24px', padding: '40px', border: `1px solid ${theme.border}`, textAlign: 'center', boxShadow: ledOn ? '0 0 60px rgba(253,224,71,0.3)' : 'none', transition: 'all 0.5s ease' }}>
-                    {/* 🟡 CÍRCULO LED - Personalización:
-                        - width: '100px', height: '100px' → tamaño del círculo
-                        - borderRadius: '50%' → hace que sea circular
-                        - background: '#fef9c3' (encendido) o '#f1f5f9' (apagado)
-                        - boxShadow: '0 0 40px #fde047, 0 0 80px #fde04744' → glow del LED
-                        Cambiar tamaño: 100px a otro valor (ej: 120px, 80px)
-                    */}
-                    <div style={{ width: '100px', height: '100px', borderRadius: '50%', background: ledOn ? '#fef9c3' : '#f1f5f9', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '48px', transition: 'all 0.4s ease', boxShadow: ledOn ? '0 0 40px #fde047, 0 0 80px #fde04744' : 'none' }}>💡</div>
-                    <div style={{ fontSize: '18px', fontWeight: '500', color: ledOn ? '#ca8a04' : theme.textMuted, marginBottom: '32px' }}>{ledOn ? 'Encendido' : 'Apagado'}</div>
-                    {/* 🔘 TOGGLE SWITCH - Personalización:
-                        - width: '72px', height: '36px' → tamaño del switch
-                        - borderRadius: '18px' → curvatura (18px = mitad de height)
-                        - background: '#38bdf8' (encendido) o '#cbd5e1' (apagado)
-                        Cambiar colores de encendido/apagado:
-                        - '#38bdf8' (azul) → DESIGN_CONFIG.CHARTS.MQTT_COLOR
-                        - '#cbd5e1' (gris) → color neutro
-                    */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
-                      <span style={{ fontSize: '14px', color: theme.textMuted }}>OFF</span>
-                      <div onClick={handleToggle} style={{ width: '72px', height: '36px', background: ledOn ? '#38bdf8' : '#cbd5e1', borderRadius: '18px', cursor: 'pointer', position: 'relative', transition: 'background 0.3s ease' }}>
-                        <div style={{ width: '28px', height: '28px', background: 'white', borderRadius: '50%', position: 'absolute', top: '4px', left: ledOn ? '40px' : '4px', transition: 'left 0.3s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
+                  <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                    {/* Bombillo 1 */}
+                    <div style={{ background: theme.card, borderRadius: '16px', padding: '20px', width: '220px', textAlign: 'center', border: `1px solid ${theme.border}`, boxShadow: ledOn ? '0 0 40px rgba(253,224,71,0.25)' : 'none', transition: 'all 0.4s ease' }}>
+                      <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: ledOn ? '#fef9c3' : '#f1f5f9', margin: '0 auto 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', transition: 'all 0.3s ease', boxShadow: ledOn ? '0 0 30px #fde04733' : 'none' }}>💡</div>
+                      <div style={{ fontSize: '14px', fontWeight: '600', color: ledOn ? '#ca8a04' : theme.textMuted, marginBottom: '12px' }}>Bombillo 1</div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+                        <span style={{ fontSize: '12px', color: theme.textMuted }}>OFF</span>
+                        <div onClick={() => handleToggle(1)} style={{ width: '64px', height: '32px', background: ledOn ? '#38bdf8' : '#cbd5e1', borderRadius: '16px', cursor: 'pointer', position: 'relative', transition: 'background 0.25s ease' }}>
+                          <div style={{ width: '24px', height: '24px', background: 'white', borderRadius: '50%', position: 'absolute', top: '4px', left: ledOn ? '36px' : '4px', transition: 'left 0.25s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.15)' }} />
+                        </div>
+                        <span style={{ fontSize: '12px', color: theme.textMuted }}>ON</span>
                       </div>
-                      <span style={{ fontSize: '14px', color: theme.textMuted }}>ON</span>
+                    </div>
+
+                    {/* Bombillo 2 */}
+                    <div style={{ background: theme.card, borderRadius: '16px', padding: '20px', width: '220px', textAlign: 'center', border: `1px solid ${theme.border}`, boxShadow: ledOn2 ? '0 0 40px rgba(253,224,71,0.25)' : 'none', transition: 'all 0.4s ease' }}>
+                      <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: ledOn2 ? '#fef9c3' : '#f1f5f9', margin: '0 auto 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', transition: 'all 0.3s ease', boxShadow: ledOn2 ? '0 0 30px #fde04733' : 'none' }}>💡</div>
+                      <div style={{ fontSize: '14px', fontWeight: '600', color: ledOn2 ? '#ca8a04' : theme.textMuted, marginBottom: '12px' }}>Bombillo 2</div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+                        <span style={{ fontSize: '12px', color: theme.textMuted }}>OFF</span>
+                        <div onClick={() => handleToggle(2)} style={{ width: '64px', height: '32px', background: ledOn2 ? '#38bdf8' : '#cbd5e1', borderRadius: '16px', cursor: 'pointer', position: 'relative', transition: 'background 0.25s ease' }}>
+                          <div style={{ width: '24px', height: '24px', background: 'white', borderRadius: '50%', position: 'absolute', top: '4px', left: ledOn2 ? '36px' : '4px', transition: 'left 0.25s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.15)' }} />
+                        </div>
+                        <span style={{ fontSize: '12px', color: theme.textMuted }}>ON</span>
+                      </div>
+                    </div>
+
+                    {/* Bombillo 3 */}
+                    <div style={{ background: theme.card, borderRadius: '16px', padding: '20px', width: '220px', textAlign: 'center', border: `1px solid ${theme.border}`, boxShadow: ledOn3 ? '0 0 40px rgba(253,224,71,0.25)' : 'none', transition: 'all 0.4s ease' }}>
+                      <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: ledOn3 ? '#fef9c3' : '#f1f5f9', margin: '0 auto 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', transition: 'all 0.3s ease', boxShadow: ledOn3 ? '0 0 30px #fde04733' : 'none' }}>💡</div>
+                      <div style={{ fontSize: '14px', fontWeight: '600', color: ledOn3 ? '#ca8a04' : theme.textMuted, marginBottom: '12px' }}>Bombillo 3</div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+                        <span style={{ fontSize: '12px', color: theme.textMuted }}>OFF</span>
+                        <div onClick={() => handleToggle(3)} style={{ width: '64px', height: '32px', background: ledOn3 ? '#38bdf8' : '#cbd5e1', borderRadius: '16px', cursor: 'pointer', position: 'relative', transition: 'background 0.25s ease' }}>
+                          <div style={{ width: '24px', height: '24px', background: 'white', borderRadius: '50%', position: 'absolute', top: '4px', left: ledOn3 ? '36px' : '4px', transition: 'left 0.25s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.15)' }} />
+                        </div>
+                        <span style={{ fontSize: '12px', color: theme.textMuted }}>ON</span>
+                      </div>
                     </div>
                   </div>
                 </div>

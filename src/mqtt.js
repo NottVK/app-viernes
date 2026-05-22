@@ -13,7 +13,8 @@ export const client = mqtt.connect(`wss://${host}:8884/mqtt`, {
 
 client.on('connect', () => {
   console.log('MQTT conectado')
-  client.subscribe('led/estado')
+  // Suscribirse a todos los topics relacionados con los LEDs
+  client.subscribe('led/#')
 })
 
 client.on('error', (err) => {
