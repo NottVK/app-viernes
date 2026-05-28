@@ -1,8 +1,14 @@
 import mqtt from 'mqtt'
 
+/** Tópicos compartidos con firmware/esp32_emqx_leds */
+export const MQTT_TOPICS = {
+  control: ['led1/control', 'led2/control', 'led3/control'],
+  estado: ['led1/estado', 'led2/estado', 'led3/estado'],
+}
+
 const DEFAULT_CONFIG = {
-  host: import.meta.env.VITE_MQTT_HOST || 'broker.hivemq.cloud',
-  port: '8884',
+  host: import.meta.env.VITE_MQTT_HOST || 'c4631a6a.ala.eu-central-1.emqxsl.com',
+  port: '8084',
   portTcp: '8883',
   user: import.meta.env.VITE_MQTT_USER || '',
   pass: import.meta.env.VITE_MQTT_PASS || '',
@@ -10,8 +16,8 @@ const DEFAULT_CONFIG = {
   path: '/mqtt',
   clientId: 'iot_dashboard_' + Math.random().toString(16).slice(2),
   keepAlive: 60,
-  topicControl: 'led/control',
-  topicEstado: 'led/estado',
+  topicControl: 'led1/control',
+  topicEstado: 'led1/estado',
   topicColor: 'led/color',
   topicHeartbeat: 'nexusled/heartbeat',
 }
@@ -133,9 +139,7 @@ let reconnectTimer = null
 const attachHandlers = (c, config) => {
   c.on('connect', () => {
     console.log('MQTT conectado:', buildUrl(config))
-    c.subscribe('led1/estado')
-    c.subscribe('led2/estado')
-    c.subscribe('led3/estado')
+    MQTT_TOPICS.estado.forEach((topic) => c.subscribe(topic))
   })
   c.on('error', (err) => {
     console.error('MQTT error:', err.message || err)

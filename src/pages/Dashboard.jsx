@@ -471,8 +471,8 @@ export default function Dashboard() {
                 { label: 'Contraseña', key: 'pass', placeholder: 'contraseña', type: 'password' },
                 { label: 'Client ID', key: 'clientId', placeholder: 'iot_dashboard' },
                 { label: 'Keep Alive (seg)', key: 'keepAlive', placeholder: '60', type: 'number' },
-                { label: 'Tópico control', key: 'topicControl', placeholder: 'led/control' },
-                { label: 'Tópico estado', key: 'topicEstado', placeholder: 'led/estado' },
+                { label: 'Tópico control (LED 1)', key: 'topicControl', placeholder: 'led1/control' },
+                { label: 'Tópico estado (LED 1)', key: 'topicEstado', placeholder: 'led1/estado' },
                 { label: 'Tópico color', key: 'topicColor', placeholder: 'led/color' },
                 { label: 'Tópico heartbeat', key: 'topicHeartbeat', placeholder: 'nexusled/heartbeat' },
               ].map(field => (
