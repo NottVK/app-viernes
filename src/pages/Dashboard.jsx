@@ -82,29 +82,32 @@ export default function Dashboard() {
     const handler = (topic, message) => {
       const msg = message.toString().trim().toUpperCase()
       const encendido = msg === 'ON' || msg === '1' || msg === 'TRUE'
-      if (topic === 'led1/estado') setLedOn(encendido)
+      const tEstado1 = mqttConfig.topicEstado || 'led1/estado'
+      if (topic === tEstado1) setLedOn(encendido)
       else if (topic === 'led2/estado') setLedOn2(encendido)
       else if (topic === 'led3/estado') setLedOn3(encendido)
     }
     const onConnect = () => setMqttStatus('Conectado ✅')
     const onError = () => setMqttStatus('Error ❌')
     const onOffline = () => setMqttStatus('Desconectado ⚠️')
-    MqttModule.client.on('message', handler)
-    MqttModule.client.on('connect', onConnect)
-    MqttModule.client.on('error', onError)
-    MqttModule.client.on('offline', onOffline)
+    
+    const activeClient = MqttModule.client
+    activeClient.on('message', handler)
+    activeClient.on('connect', onConnect)
+    activeClient.on('error', onError)
+    activeClient.on('offline', onOffline)
     return () => {
-      MqttModule.client.off('message', handler)
-      MqttModule.client.off('connect', onConnect)
-      MqttModule.client.off('error', onError)
-      MqttModule.client.off('offline', onOffline)
+      activeClient.off('message', handler)
+      activeClient.off('connect', onConnect)
+      activeClient.off('error', onError)
+      activeClient.off('offline', onOffline)
     }
-  }, [])
+  }, [mqttConfig])
 
   const BOMBILLOS = [
-    { id: 1, label: 'Bombillo 1 — Sala', color: '#ef4444', colorName: 'Rojo', r: 239, g: 68, b: 68, pin: 'D7 (R)', on: ledOn, onCount: ledOnCount, offCount: ledOffCount },
-    { id: 2, label: 'Bombillo 2 — Cocina', color: '#22c55e', colorName: 'Verde', r: 34, g: 197, b: 94, pin: 'D5 (G)', on: ledOn2, onCount: ledOnCount2, offCount: ledOffCount2 },
-    { id: 3, label: 'Bombillo 3 — Patio', color: '#2563eb', colorName: 'Azul', r: 37, g: 99, b: 235, pin: 'D3 (B)', on: ledOn3, onCount: ledOnCount3, offCount: ledOffCount3 },
+    { id: 1, label: 'Bombillo 1 — Sala', color: '#ef4444', colorName: 'Rojo', r: 239, g: 68, b: 68, pin: 'D27 (R)', on: ledOn, onCount: ledOnCount, offCount: ledOffCount },
+    { id: 2, label: 'Bombillo 2 — Cocina', color: '#22c55e', colorName: 'Verde', r: 34, g: 197, b: 94, pin: 'D25 (G)', on: ledOn2, onCount: ledOnCount2, offCount: ledOffCount2 },
+    { id: 3, label: 'Bombillo 3 — Patio', color: '#2563eb', colorName: 'Azul', r: 37, g: 99, b: 235, pin: 'D23 (B)', on: ledOn3, onCount: ledOnCount3, offCount: ledOffCount3 },
   ]
 
   const rgbActivo = ledOn || ledOn2 || ledOn3
@@ -119,7 +122,7 @@ export default function Dashboard() {
   const handleToggle = (id) => {
     let topic = '', newState = false
     if (id === 1) {
-      newState = !ledOn; setLedOn(newState); topic = 'led1/control'
+      newState = !ledOn; setLedOn(newState); topic = mqttConfig.topicControl || 'led1/control'
       if (newState) setLedOnCount(c => c + 1); else setLedOffCount(c => c + 1)
     } else if (id === 2) {
       newState = !ledOn2; setLedOn2(newState); topic = 'led2/control'
@@ -155,24 +158,13 @@ export default function Dashboard() {
       .catch(() => setHttpStatus('Sin conexión ❌'))
   }, [])
 
-  // ✅ guardarMqttConfig ahora reconecta de verdad
   const guardarMqttConfig = () => {
     const newConfig = MqttModule.normalizeMqttConfig(tempMqttConfig)
     setTempMqttConfig(newConfig)
-    const newClient = MqttModule.reconnectMqtt(newConfig)
+    MqttModule.reconnectMqtt(newConfig)
     setMqttConfig(newConfig)
     setMqttStatus('Reconectando...')
     setEditandoMqtt(false)
-    newClient.on('connect', () => setMqttStatus('Conectado ✅'))
-    newClient.on('error', () => setMqttStatus('Error ❌'))
-    newClient.on('offline', () => setMqttStatus('Desconectado ⚠️'))
-    newClient.on('message', (topic, message) => {
-      const msg = message.toString().trim().toUpperCase()
-      const encendido = msg === 'ON' || msg === '1' || msg === 'TRUE'
-      if (topic === 'led1/estado') setLedOn(encendido)
-      else if (topic === 'led2/estado') setLedOn2(encendido)
-      else if (topic === 'led3/estado') setLedOn3(encendido)
-    })
   }
 
   const guardarHttpConfig = () => {
@@ -758,7 +750,7 @@ export default function Dashboard() {
             <div style={{ padding: '40px 20px', maxWidth: '600px', margin: '0 auto' }}>
               <div style={{ textAlign: 'center', marginBottom: '32px' }}>
                 <div style={{ fontSize: '28px', fontWeight: '700', color: theme.text }}>Control de Bombillos</div>
-                <div style={{ color: theme.textMuted, marginTop: '8px' }}>LED RGB — R→D7 · G→D5 · B→D3</div>
+                <div style={{ color: theme.textMuted, marginTop: '8px' }}>LED RGB — R→D27 · G→D25 · B→D23</div>
               </div>
 
               <div style={{ background: theme.card, borderRadius: '20px', padding: '24px', border: `1px solid ${theme.border}`, marginBottom: '24px', textAlign: 'center' }}>

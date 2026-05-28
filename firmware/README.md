@@ -9,13 +9,13 @@
 
 Host: `c4631a6a.ala.eu-central-1.emqxsl.com`
 
-## LED RGB (Wokwi)
+## LED RGB (ESP32)
 
-| Bombillo | Color  | Pin Wokwi |
-|----------|--------|-----------|
-| 1        | Rojo   | D7        |
-| 2        | Verde  | D5        |
-| 3        | Azul   | D3        |
+| Bombillo | Color  | GPIO ESP32 |
+|----------|--------|------------|
+| 1        | Rojo   | GPIO 27    |
+| 2        | Verde  | GPIO 25    |
+| 3        | Azul   | GPIO 23    |
 
 Al iniciar el RGB está **apagado**. Cada botón de la app enciende solo su color.
 

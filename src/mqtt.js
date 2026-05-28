@@ -87,6 +87,11 @@ const fixLegacyEmqxPort = (protocol, host, port) => {
 
 export const normalizeMqttConfig = (config) => {
   const next = { ...DEFAULT_CONFIG, ...config }
+
+  // Fallback a las credenciales por defecto si las de localStorage están vacías
+  if (!next.user && DEFAULT_CONFIG.user) next.user = DEFAULT_CONFIG.user
+  if (!next.pass && DEFAULT_CONFIG.pass) next.pass = DEFAULT_CONFIG.pass
+
   const host = (next.host || '').trim()
   let protocol = (next.protocol || 'wss').toLowerCase()
 
@@ -140,6 +145,11 @@ const attachHandlers = (c, config) => {
   c.on('connect', () => {
     console.log('MQTT conectado:', buildUrl(config))
     MQTT_TOPICS.estado.forEach((topic) => c.subscribe(topic))
+    
+    // Suscribir a tópico personalizado si es distinto a los por defecto
+    if (config.topicEstado && !MQTT_TOPICS.estado.includes(config.topicEstado)) {
+      c.subscribe(config.topicEstado)
+    }
   })
   c.on('error', (err) => {
     console.error('MQTT error:', err.message || err)

@@ -1,7 +1,7 @@
 /**
  * ESP32 + EMQX Cloud + LED RGB (cátodo común en Wokwi)
  *
- * Pines Wokwi:  Rojo→D7  |  Verde→D5  |  Azul→D3
+ * Pines ESP32:  Rojo→GPIO27  |  Verde→GPIO25  |  Azul→GPIO23
  * Apagado por defecto. Cada bombillo de la app enciende su canal.
  *
  * App → led1/control, led2/control, led3/control (ON|OFF)
@@ -27,16 +27,10 @@ const char* TOPIC_LED2_EST  = "led2/estado";
 const char* TOPIC_LED3_CTRL = "led3/control";
 const char* TOPIC_LED3_EST  = "led3/estado";
 
-// LED RGB: Bombillo1=Rojo D7 | Bombillo2=Verde D5 | Bombillo3=Azul D3
-#if defined(D3) && defined(D5) && defined(D7)
-const int PIN_ROJO  = D7;
-const int PIN_VERDE = D5;
-const int PIN_AZUL  = D3;
-#else
-const int PIN_ROJO  = 7;
-const int PIN_VERDE = 5;
-const int PIN_AZUL  = 3;
-#endif
+// LED RGB: Bombillo1=Rojo GPIO27 | Bombillo2=Verde GPIO25 | Bombillo3=Azul GPIO23
+const int PIN_ROJO  = 27;
+const int PIN_VERDE = 25;
+const int PIN_AZUL  = 23;
 
 const unsigned long RECONNECT_WIFI_MS = 10000;
 const unsigned long RECONNECT_MQTT_MS = 5000;
@@ -163,7 +157,7 @@ void setup() {
   startWifi();
 
   Serial.println("=== ESP32 LED RGB + EMQX ===");
-  Serial.println("R→D7 | G→D5 | B→D3 | Inicio: APAGADO");
+  Serial.println("R→GPIO27 | G→GPIO25 | B→GPIO23 | Inicio: APAGADO");
 }
 
 void loop() {
