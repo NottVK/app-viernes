@@ -142,6 +142,7 @@ export default function Dashboard() {
   // ✅ guardarMqttConfig ahora reconecta de verdad
   const guardarMqttConfig = () => {
     const newConfig = MqttModule.normalizeMqttConfig(tempMqttConfig)
+    setTempMqttConfig(newConfig)
     const newClient = MqttModule.reconnectMqtt(newConfig)
     setMqttConfig(newConfig)
     setMqttStatus('Reconectando...')
@@ -463,7 +464,8 @@ export default function Dashboard() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {[
                 { label: 'Host del broker', key: 'host', placeholder: 'broker.hivemq.cloud' },
-                { label: 'Puerto WebSocket', key: 'port', placeholder: '8884', type: 'number' },
+                { label: 'Puerto WebSocket (WSS)', key: 'port', placeholder: MqttModule.getSuggestedWsPort(tempMqttConfig.host || ''), type: 'number' },
+                { label: 'Ruta WebSocket', key: 'path', placeholder: '/mqtt' },
                 { label: 'Puerto TCP', key: 'portTcp', placeholder: '8883', type: 'number' },
                 { label: 'Usuario', key: 'user', placeholder: 'usuario' },
                 { label: 'Contraseña', key: 'pass', placeholder: 'contraseña', type: 'password' },
@@ -489,7 +491,7 @@ export default function Dashboard() {
                 </select>
                 {secureWsOnly && (
                   <p style={{ fontSize: '12px', color: theme.textMuted, marginTop: '8px' }}>
-                    En HTTPS (Vercel) solo se permite WSS. Usa el puerto 8884 de tu broker EMQX/HiveMQ.
+                    HTTPS → solo WSS. EMQX (<code>emqxsl.com</code>): puerto <strong>8084</strong>. HiveMQ Cloud: puerto <strong>8884</strong>. Ruta: <strong>/mqtt</strong>.
                   </p>
                 )}
               </div>
@@ -805,7 +807,7 @@ export default function Dashboard() {
                     <div style={{ fontSize: '11px', color: theme.textMuted, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Puerto WebSocket</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span style={{ fontSize: '16px' }}>🌐</span>
-                      <span style={{ fontSize: '20px', fontWeight: '700', color: '#38bdf8' }}>{mqttConfig.port || '8884'}</span>
+                      <span style={{ fontSize: '20px', fontWeight: '700', color: '#38bdf8' }}>{mqttConfig.port || MqttModule.getSuggestedWsPort(mqttConfig.host)}</span>
                     </div>
                   </div>
                 </div>
