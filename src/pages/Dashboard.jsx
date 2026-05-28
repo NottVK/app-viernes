@@ -6,6 +6,9 @@ import { supabase } from '../supabase'
 import { useNavigate } from 'react-router-dom'
 import * as MqttModule from '../mqtt'
 
+const secureWsOnly = MqttModule.requiresSecureWebSocket()
+const browserOnly = MqttModule.isBrowserRuntime()
+
 export default function Dashboard() {
   const navigate = useNavigate()
 
@@ -74,6 +77,7 @@ export default function Dashboard() {
   const [mqttStatus, setMqttStatus] = useState('Conectando...')
 
   useEffect(() => {
+    MqttModule.initMqtt()
     if (MqttModule.client.connected) setMqttStatus('Conectado ✅')
     const handler = (topic, message) => {
       const msg = message.toString()
@@ -117,20 +121,7 @@ export default function Dashboard() {
   const [editandoMqtt, setEditandoMqtt] = useState(false)
   const [editandoHttp, setEditandoHttp] = useState(false)
   const [httpStatus, setHttpStatus] = useState('Verificando...')
-  const [mqttConfig, setMqttConfig] = useState(() => {
-    const saved = localStorage.getItem('mqttConfig')
-    return saved ? JSON.parse(saved) : {
-      host: import.meta.env.VITE_MQTT_HOST || 'broker.hivemq.cloud',
-      port: '8884', portTcp: '8883',
-      user: import.meta.env.VITE_MQTT_USER || '',
-      pass: import.meta.env.VITE_MQTT_PASS || '',
-      protocol: 'wss',
-      clientId: 'iot_dashboard_' + Math.random().toString(16).slice(2),
-      keepAlive: 60,
-      topicControl: 'led/control', topicEstado: 'led/estado',
-      topicColor: 'led/color', topicHeartbeat: 'nexusled/heartbeat',
-    }
-  })
+  const [mqttConfig, setMqttConfig] = useState(() => MqttModule.getMqttConfig())
   const [httpConfig, setHttpConfig] = useState(() => {
     const saved = localStorage.getItem('httpConfig')
     return saved ? JSON.parse(saved) : {
@@ -150,7 +141,7 @@ export default function Dashboard() {
 
   // ✅ guardarMqttConfig ahora reconecta de verdad
   const guardarMqttConfig = () => {
-    const newConfig = { ...tempMqttConfig }
+    const newConfig = MqttModule.normalizeMqttConfig(tempMqttConfig)
     const newClient = MqttModule.reconnectMqtt(newConfig)
     setMqttConfig(newConfig)
     setMqttStatus('Reconectando...')
@@ -491,11 +482,16 @@ export default function Dashboard() {
               <div>
                 <label style={{ fontSize: '13px', color: theme.textMuted, display: 'block', marginBottom: '6px' }}>Protocolo</label>
                 <select value={tempMqttConfig.protocol} onChange={e => setTempMqttConfig(c => ({ ...c, protocol: e.target.value }))} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: `1px solid ${theme.border}`, fontSize: '14px', outline: 'none', boxSizing: 'border-box', background: theme.card, color: theme.text }}>
-                  <option value="wss">WSS (Seguro)</option>
-                  <option value="ws">WS (WebSocket)</option>
-                  <option value="mqtt">MQTT (TCP)</option>
-                  <option value="mqtts">MQTTS (TCP Seguro)</option>
+                  <option value="wss">WSS (Seguro — web, Vercel, APK)</option>
+                  {!secureWsOnly && <option value="ws">WS (solo HTTP local)</option>}
+                  {!browserOnly && <option value="mqtt">MQTT (TCP — escritorio/Node)</option>}
+                  {!browserOnly && <option value="mqtts">MQTTS (TCP seguro)</option>}
                 </select>
+                {secureWsOnly && (
+                  <p style={{ fontSize: '12px', color: theme.textMuted, marginTop: '8px' }}>
+                    En HTTPS (Vercel) solo se permite WSS. Usa el puerto 8884 de tu broker EMQX/HiveMQ.
+                  </p>
+                )}
               </div>
               <div style={{ background: theme.sectionBg, padding: '12px', borderRadius: '8px', borderLeft: '3px solid #22c55e' }}>
                 <div style={{ fontSize: '12px', color: theme.textMuted }}>✅ Al guardar se reconectará automáticamente al nuevo broker sin reiniciar.</div>
