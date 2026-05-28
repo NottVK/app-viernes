@@ -1,7 +1,7 @@
 /**
  * ESP32 + EMQX Cloud + LED RGB (cátodo común en Wokwi)
  *
- * D3 = Rojo  |  D4 = Verde  |  D7 = Azul
+ * Cables en Wokwi (cátodo común):  R→D4  |  G→D7  |  B→D3
  * Apagado por defecto. Cada bombillo de la app enciende su canal.
  *
  * App → led1/control, led2/control, led3/control (ON|OFF)
@@ -27,15 +27,15 @@ const char* TOPIC_LED2_EST  = "led2/estado";
 const char* TOPIC_LED3_CTRL = "led3/control";
 const char* TOPIC_LED3_EST  = "led3/estado";
 
-// LED RGB: Rojo=D3, Verde=D4, Azul=D7
+// Pines físicos del LED RGB en Wokwi (terminal R,G,B del componente)
 #if defined(D3) && defined(D4) && defined(D7)
-const int PIN_ROJO  = D3;
-const int PIN_VERDE = D4;
-const int PIN_AZUL  = D7;
+const int PIN_ROJO  = D4;  // terminal R del LED → D4
+const int PIN_VERDE = D7;  // terminal G del LED → D7
+const int PIN_AZUL  = D3;  // terminal B del LED → D3
 #else
-const int PIN_ROJO  = 3;
-const int PIN_VERDE = 4;
-const int PIN_AZUL  = 7;
+const int PIN_ROJO  = 4;
+const int PIN_VERDE = 7;
+const int PIN_AZUL  = 3;
 #endif
 
 const unsigned long RECONNECT_WIFI_MS = 10000;
@@ -111,6 +111,12 @@ bool wifiConnected() {
   return WiFi.status() == WL_CONNECTED;
 }
 
+void limpiarEstadosRetenidos() {
+  mqtt.publish(TOPIC_LED1_EST, "OFF", true);
+  mqtt.publish(TOPIC_LED2_EST, "OFF", true);
+  mqtt.publish(TOPIC_LED3_EST, "OFF", true);
+}
+
 bool mqttConnect() {
   if (!wifiConnected()) return false;
 
@@ -120,6 +126,10 @@ bool mqttConnect() {
     mqtt.subscribe(TOPIC_LED1_CTRL);
     mqtt.subscribe(TOPIC_LED2_CTRL);
     mqtt.subscribe(TOPIC_LED3_CTRL);
+
+    canalRojo = canalVerde = canalAzul = false;
+    aplicarRgb();
+    limpiarEstadosRetenidos();
     publicarTodosEstados();
     return true;
   }
@@ -153,7 +163,7 @@ void setup() {
   startWifi();
 
   Serial.println("=== ESP32 LED RGB + EMQX ===");
-  Serial.println("Rojo=D3 | Verde=D4 | Azul=D7 | Inicio: APAGADO");
+  Serial.println("R→D4 | G→D7 | B→D3 | Inicio: APAGADO");
 }
 
 void loop() {

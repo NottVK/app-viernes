@@ -80,10 +80,11 @@ export default function Dashboard() {
     MqttModule.initMqtt()
     if (MqttModule.client.connected) setMqttStatus('Conectado ✅')
     const handler = (topic, message) => {
-      const msg = message.toString()
-      if (topic === 'led1/estado') setLedOn(msg === 'ON')
-      else if (topic === 'led2/estado') setLedOn2(msg === 'ON')
-      else if (topic === 'led3/estado') setLedOn3(msg === 'ON')
+      const msg = message.toString().trim().toUpperCase()
+      const encendido = msg === 'ON' || msg === '1' || msg === 'TRUE'
+      if (topic === 'led1/estado') setLedOn(encendido)
+      else if (topic === 'led2/estado') setLedOn2(encendido)
+      else if (topic === 'led3/estado') setLedOn3(encendido)
     }
     const onConnect = () => setMqttStatus('Conectado ✅')
     const onError = () => setMqttStatus('Error ❌')
@@ -101,15 +102,19 @@ export default function Dashboard() {
   }, [])
 
   const BOMBILLOS = [
-    { id: 1, label: 'Bombillo 1 — Sala', color: '#ef4444', colorName: 'Rojo', pin: 'D3 (R)', on: ledOn, onCount: ledOnCount, offCount: ledOffCount },
-    { id: 2, label: 'Bombillo 2 — Cocina', color: '#22c55e', colorName: 'Verde', pin: 'D4 (G)', on: ledOn2, onCount: ledOnCount2, offCount: ledOffCount2 },
-    { id: 3, label: 'Bombillo 3 — Patio', color: '#3b82f6', colorName: 'Azul', pin: 'D7 (B)', on: ledOn3, onCount: ledOnCount3, offCount: ledOffCount3 },
+    { id: 1, label: 'Bombillo 1 — Sala', color: '#ef4444', colorName: 'Rojo', r: 239, g: 68, b: 68, pin: 'D4 (R)', on: ledOn, onCount: ledOnCount, offCount: ledOffCount },
+    { id: 2, label: 'Bombillo 2 — Cocina', color: '#22c55e', colorName: 'Verde', r: 34, g: 197, b: 94, pin: 'D7 (G)', on: ledOn2, onCount: ledOnCount2, offCount: ledOffCount2 },
+    { id: 3, label: 'Bombillo 3 — Patio', color: '#2563eb', colorName: 'Azul', r: 37, g: 99, b: 235, pin: 'D3 (B)', on: ledOn3, onCount: ledOnCount3, offCount: ledOffCount3 },
   ]
 
   const rgbActivo = ledOn || ledOn2 || ledOn3
+  const rgbMix = BOMBILLOS.reduce(
+    (acc, b) => (b.on ? { r: acc.r + b.r, g: acc.g + b.g, b: acc.b + b.b } : acc),
+    { r: 0, g: 0, b: 0 }
+  )
   const rgbColor = rgbActivo
-    ? `rgb(${ledOn ? 255 : 0}, ${ledOn2 ? 255 : 0}, ${ledOn3 ? 255 : 0})`
-    : '#1e293b'
+    ? `rgb(${Math.min(rgbMix.r, 255)}, ${Math.min(rgbMix.g, 255)}, ${Math.min(rgbMix.b, 255)})`
+    : '#334155'
 
   const handleToggle = (id) => {
     let topic = '', newState = false
@@ -162,10 +167,11 @@ export default function Dashboard() {
     newClient.on('error', () => setMqttStatus('Error ❌'))
     newClient.on('offline', () => setMqttStatus('Desconectado ⚠️'))
     newClient.on('message', (topic, message) => {
-      const msg = message.toString()
-      if (topic === 'led1/estado') setLedOn(msg === 'ON')
-      else if (topic === 'led2/estado') setLedOn2(msg === 'ON')
-      else if (topic === 'led3/estado') setLedOn3(msg === 'ON')
+      const msg = message.toString().trim().toUpperCase()
+      const encendido = msg === 'ON' || msg === '1' || msg === 'TRUE'
+      if (topic === 'led1/estado') setLedOn(encendido)
+      else if (topic === 'led2/estado') setLedOn2(encendido)
+      else if (topic === 'led3/estado') setLedOn3(encendido)
     })
   }
 
@@ -752,7 +758,7 @@ export default function Dashboard() {
             <div style={{ padding: '40px 20px', maxWidth: '600px', margin: '0 auto' }}>
               <div style={{ textAlign: 'center', marginBottom: '32px' }}>
                 <div style={{ fontSize: '28px', fontWeight: '700', color: theme.text }}>Control de Bombillos</div>
-                <div style={{ color: theme.textMuted, marginTop: '8px' }}>LED RGB — D3 (R) · D4 (G) · D7 (B)</div>
+                <div style={{ color: theme.textMuted, marginTop: '8px' }}>LED RGB — R→D4 · G→D7 · B→D3</div>
               </div>
 
               <div style={{ background: theme.card, borderRadius: '20px', padding: '24px', border: `1px solid ${theme.border}`, marginBottom: '24px', textAlign: 'center' }}>
@@ -786,14 +792,20 @@ export default function Dashboard() {
                   }}>
                     <div style={{
                       width: '80px', height: '80px', borderRadius: '50%',
-                      background: b.on ? `${b.color}22` : '#f1f5f9',
+                      background: b.on ? b.color : '#e2e8f0',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '36px', flexShrink: 0,
-                      boxShadow: b.on ? `0 0 28px ${b.color}` : 'none',
-                      border: `2px solid ${b.on ? b.color : '#e2e8f0'}`,
+                      flexShrink: 0,
+                      boxShadow: b.on ? `0 0 24px ${b.color}` : 'inset 0 2px 8px #cbd5e1',
+                      border: `3px solid ${b.on ? b.color : '#cbd5e1'}`,
                       transition: 'all 0.35s ease',
-                      filter: b.on ? 'none' : 'grayscale(1) opacity(0.5)',
-                    }}>💡</div>
+                    }}>
+                      <span style={{
+                        fontSize: '11px', fontWeight: '700', letterSpacing: '0.5px',
+                        color: b.on ? '#fff' : '#94a3b8', textTransform: 'uppercase',
+                      }}>
+                        {b.on ? b.colorName : 'OFF'}
+                      </span>
+                    </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: '16px', fontWeight: '600', color: theme.text, marginBottom: '4px' }}>{b.label}</div>
                       <div style={{
