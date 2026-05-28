@@ -100,6 +100,17 @@ export default function Dashboard() {
     }
   }, [])
 
+  const BOMBILLOS = [
+    { id: 1, label: 'Bombillo 1 — Sala', color: '#ef4444', colorName: 'Rojo', pin: 'D3 (R)', on: ledOn, onCount: ledOnCount, offCount: ledOffCount },
+    { id: 2, label: 'Bombillo 2 — Cocina', color: '#22c55e', colorName: 'Verde', pin: 'D4 (G)', on: ledOn2, onCount: ledOnCount2, offCount: ledOffCount2 },
+    { id: 3, label: 'Bombillo 3 — Patio', color: '#3b82f6', colorName: 'Azul', pin: 'D7 (B)', on: ledOn3, onCount: ledOnCount3, offCount: ledOffCount3 },
+  ]
+
+  const rgbActivo = ledOn || ledOn2 || ledOn3
+  const rgbColor = rgbActivo
+    ? `rgb(${ledOn ? 255 : 0}, ${ledOn2 ? 255 : 0}, ${ledOn3 ? 255 : 0})`
+    : '#1e293b'
+
   const handleToggle = (id) => {
     let topic = '', newState = false
     if (id === 1) {
@@ -366,14 +377,14 @@ export default function Dashboard() {
   // 🎨 DATOS ESTÁTICOS DE DECORACIÓN
   // ═══════════════════════════════════════════
   const theme = {
-    bg: ledOn ? '#000000' : ledOn2 ? '#1a0000' : ledOn3 ? '#001a00' : '#f8fafc',
-    card: ledOn ? '#111111' : ledOn2 ? '#1f0a0a' : ledOn3 ? '#0a1f0a' : '#ffffff',
-    border: ledOn ? '#222222' : ledOn2 ? '#3a1010' : ledOn3 ? '#103a10' : '#e2e8f0',
-    text: (ledOn || ledOn2 || ledOn3) ? '#f1f5f9' : '#0f172a',
-    textMuted: (ledOn || ledOn2 || ledOn3) ? '#64748b' : '#94a3b8',
-    topbar: ledOn ? 'rgba(0,0,0,0.95)' : ledOn2 ? 'rgba(26,0,0,0.95)' : ledOn3 ? 'rgba(0,26,0,0.95)' : 'rgba(248,250,252,0.95)',
-    sectionBg: ledOn ? '#050505' : ledOn2 ? '#150505' : ledOn3 ? '#051505' : '#f1f5f9',
-    sidebar: ledOn ? '#0a0a0a' : ledOn2 ? '#120505' : ledOn3 ? '#051205' : '#0f172a',
+    bg: '#f8fafc',
+    card: '#ffffff',
+    border: '#e2e8f0',
+    text: '#0f172a',
+    textMuted: '#94a3b8',
+    topbar: 'rgba(248,250,252,0.95)',
+    sectionBg: '#f1f5f9',
+    sidebar: '#0f172a',
   }
   const progress = Math.min(scrollY / 3, 100)
   const progress2 = Math.min(scrollY / 5, 100)
@@ -594,8 +605,8 @@ export default function Dashboard() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: '12px', color: '#94a3b8' }}>💡 LEDs</span>
             <div style={{ display: 'flex', gap: '6px' }}>
-              {[{ on: ledOn }, { on: ledOn2 }, { on: ledOn3 }].map((l, i) => (
-                <div key={i} style={{ width: '7px', height: '7px', borderRadius: '50%', background: l.on ? '#4ade80' : '#475569', boxShadow: l.on ? '0 0 5px #4ade80' : 'none', transition: 'all 0.3s' }} />
+              {BOMBILLOS.map((b) => (
+                <div key={b.id} title={b.on ? b.colorName : 'Apagado'} style={{ width: '7px', height: '7px', borderRadius: '50%', background: b.on ? b.color : '#475569', boxShadow: b.on ? `0 0 6px ${b.color}` : 'none', transition: 'all 0.3s' }} />
               ))}
             </div>
           </div>
@@ -739,26 +750,75 @@ export default function Dashboard() {
           ═══════════════════════════════════════ */}
           {activeSection === 'bombillos' && (
             <div style={{ padding: '40px 20px', maxWidth: '600px', margin: '0 auto' }}>
-              <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+              <div style={{ textAlign: 'center', marginBottom: '32px' }}>
                 <div style={{ fontSize: '28px', fontWeight: '700', color: theme.text }}>Control de Bombillos</div>
-                <div style={{ color: theme.textMuted, marginTop: '8px' }}>ESP32 — GPIO 2, 4, 5</div>
+                <div style={{ color: theme.textMuted, marginTop: '8px' }}>LED RGB — D3 (R) · D4 (G) · D7 (B)</div>
               </div>
+
+              <div style={{ background: theme.card, borderRadius: '20px', padding: '24px', border: `1px solid ${theme.border}`, marginBottom: '24px', textAlign: 'center' }}>
+                <div style={{ fontSize: '13px', color: theme.textMuted, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>LED RGB (Wokwi)</div>
+                <div style={{
+                  width: '96px', height: '96px', borderRadius: '50%', margin: '0 auto 12px',
+                  background: rgbActivo ? rgbColor : '#334155',
+                  border: `3px solid ${rgbActivo ? rgbColor : '#475569'}`,
+                  boxShadow: rgbActivo ? `0 0 32px ${rgbColor}, 0 0 64px ${rgbColor}55` : 'inset 0 0 12px #0f172a',
+                  transition: 'all 0.35s ease',
+                  opacity: rgbActivo ? 1 : 0.45,
+                }} />
+                <div style={{ fontSize: '15px', fontWeight: '600', color: rgbActivo ? theme.text : theme.textMuted }}>
+                  {rgbActivo
+                    ? `Encendido — ${[ledOn && 'Rojo', ledOn2 && 'Verde', ledOn3 && 'Azul'].filter(Boolean).join(' + ')}`
+                    : 'Apagado'}
+                </div>
+                <div style={{ fontSize: '12px', color: theme.textMuted, marginTop: '6px' }}>
+                  {rgbActivo ? rgbColor : 'Sin señal en los canales R, G ni B'}
+                </div>
+              </div>
+
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                {[
-                  { label: 'Bombillo 1 — Sala', on: ledOn, id: 1, onCount: ledOnCount, offCount: ledOffCount },
-                  { label: 'Bombillo 2 — Cocina', on: ledOn2, id: 2, onCount: ledOnCount2, offCount: ledOffCount2 },
-                  { label: 'Bombillo 3 — Patio', on: ledOn3, id: 3, onCount: ledOnCount3, offCount: ledOffCount3 },
-                ].map(b => (
-                  <div key={b.id} style={{ background: theme.card, borderRadius: '20px', padding: '28px', border: `1px solid ${theme.border}`, display: 'flex', alignItems: 'center', gap: '24px', boxShadow: b.on ? '0 0 30px rgba(253,224,71,0.15)' : 'none', transition: 'all 0.4s ease' }}>
-                    <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: b.on ? '#fef9c3' : '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', flexShrink: 0, boxShadow: b.on ? '0 0 24px #fde047' : 'none', transition: 'all 0.3s ease' }}>💡</div>
+                {BOMBILLOS.map(b => (
+                  <div key={b.id} style={{
+                    background: theme.card, borderRadius: '20px', padding: '28px',
+                    border: `2px solid ${b.on ? b.color : theme.border}`,
+                    display: 'flex', alignItems: 'center', gap: '24px',
+                    boxShadow: b.on ? `0 0 28px ${b.color}44` : 'none',
+                    transition: 'all 0.35s ease',
+                  }}>
+                    <div style={{
+                      width: '80px', height: '80px', borderRadius: '50%',
+                      background: b.on ? `${b.color}22` : '#f1f5f9',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '36px', flexShrink: 0,
+                      boxShadow: b.on ? `0 0 28px ${b.color}` : 'none',
+                      border: `2px solid ${b.on ? b.color : '#e2e8f0'}`,
+                      transition: 'all 0.35s ease',
+                      filter: b.on ? 'none' : 'grayscale(1) opacity(0.5)',
+                    }}>💡</div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: '16px', fontWeight: '600', color: theme.text, marginBottom: '4px' }}>{b.label}</div>
-                      <div style={{ fontSize: '13px', color: b.on ? '#ca8a04' : theme.textMuted, marginBottom: '4px' }}>{b.on ? 'Encendido' : 'Apagado'}</div>
+                      <div style={{
+                        display: 'inline-block', fontSize: '13px', fontWeight: '600',
+                        color: b.on ? '#fff' : theme.textMuted,
+                        background: b.on ? b.color : '#f1f5f9',
+                        padding: '4px 12px', borderRadius: '20px', marginBottom: '8px',
+                      }}>
+                        {b.on ? b.colorName : 'Apagado'}
+                      </div>
+                      <div style={{ fontSize: '12px', color: theme.textMuted, marginBottom: '4px' }}>Canal {b.pin} · {b.on ? 'Encendido' : 'Apagado'}</div>
                       <div style={{ fontSize: '12px', color: theme.textMuted, marginBottom: '16px' }}>Encendidos: {b.onCount} · Apagados: {b.offCount}</div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <span style={{ fontSize: '12px', color: theme.textMuted }}>OFF</span>
-                        <div onClick={() => handleToggle(b.id)} style={{ width: '64px', height: '32px', background: b.on ? '#38bdf8' : '#cbd5e1', borderRadius: '16px', cursor: 'pointer', position: 'relative', transition: 'background 0.25s ease' }}>
-                          <div style={{ width: '24px', height: '24px', background: 'white', borderRadius: '50%', position: 'absolute', top: '4px', left: b.on ? '36px' : '4px', transition: 'left 0.25s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.15)' }} />
+                        <div onClick={() => handleToggle(b.id)} style={{
+                          width: '64px', height: '32px',
+                          background: b.on ? b.color : '#cbd5e1',
+                          borderRadius: '16px', cursor: 'pointer', position: 'relative',
+                          transition: 'background 0.25s ease',
+                        }}>
+                          <div style={{
+                            width: '24px', height: '24px', background: 'white', borderRadius: '50%',
+                            position: 'absolute', top: '4px', left: b.on ? '36px' : '4px',
+                            transition: 'left 0.25s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.15)',
+                          }} />
                         </div>
                         <span style={{ fontSize: '12px', color: theme.textMuted }}>ON</span>
                       </div>
@@ -897,7 +957,7 @@ export default function Dashboard() {
                         <div style={{ fontSize: '16px', fontWeight: '600', color: theme.text }}>{m.nombre}</div>
                         <div style={{ fontSize: '13px', color: colores[i % colores.length], fontWeight: '500' }}>{m.rol}</div>
                       </div>
-                      <button onClick={() => abrirEdicion(m)} style={{ background: ledOn ? '#1a1a1a' : '#f8fafc', border: `1px solid ${theme.border}`, borderRadius: '8px', padding: '8px 14px', fontSize: '13px', cursor: 'pointer', color: theme.textMuted }}>✏️ Editar</button>
+                      <button onClick={() => abrirEdicion(m)} style={{ background: '#f8fafc', border: `1px solid ${theme.border}`, borderRadius: '8px', padding: '8px 14px', fontSize: '13px', cursor: 'pointer', color: theme.textMuted }}>✏️ Editar</button>
                     </div>
                     {(m.descripcion || m.correo || m.red_social_url) && (
                       <div style={{ padding: '16px 24px 20px', borderTop: `1px solid ${theme.border}` }}>
@@ -983,7 +1043,7 @@ export default function Dashboard() {
                   {['Nombre', 'Apellido', 'Bio'].map(field => (
                     <div key={field}>
                       <label style={{ fontSize: '13px', color: theme.textMuted, display: 'block', marginBottom: '6px' }}>{field}</label>
-                      <input defaultValue={perfil?.[field.toLowerCase()] || ''} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: `1px solid ${theme.border}`, fontSize: '14px', outline: 'none', boxSizing: 'border-box', background: ledOn ? '#1a1a1a' : 'white', color: theme.text }} />
+                      <input defaultValue={perfil?.[field.toLowerCase()] || ''} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: `1px solid ${theme.border}`, fontSize: '14px', outline: 'none', boxSizing: 'border-box', background: 'white', color: theme.text }} />
                     </div>
                   ))}
                   <button style={{ marginTop: '8px', padding: '12px', background: '#0ea5e9', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', cursor: 'pointer', fontWeight: '500' }}>Guardar cambios</button>
