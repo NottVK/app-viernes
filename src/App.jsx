@@ -1,9 +1,9 @@
 import { HashRouter, Route, Routes, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ResetPassword from './pages/ResetPassword'
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
-import ResetPassword from './pages/ResetPassword'
 
 function App() {
   return (
