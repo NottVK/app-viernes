@@ -11,11 +11,11 @@ Host: `c4631a6a.ala.eu-central-1.emqxsl.com`
 
 ## LED RGB (Wokwi)
 
-| Bombillo | Color  | Pin Wokwi (terminal RGB) |
-|----------|--------|--------------------------|
-| 1        | Rojo   | D4 (R)                   |
-| 2        | Verde  | D7 (G)                   |
-| 3        | Azul   | D3 (B)                   |
+| Bombillo | Color  | Pin Wokwi |
+|----------|--------|-----------|
+| 1        | Rojo   | D7        |
+| 2        | Verde  | D5        |
+| 3        | Azul   | D3        |
 
 Al iniciar el RGB está **apagado**. Cada botón de la app enciende solo su color.
 
