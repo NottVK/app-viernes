@@ -76,6 +76,21 @@ export default function Dashboard() {
   const [ledOffCount3, setLedOffCount3] = useState(0)
   const [mqttStatus, setMqttStatus] = useState('Conectando...')
 
+  const [editandoMqtt, setEditandoMqtt] = useState(false)
+  const [editandoHttp, setEditandoHttp] = useState(false)
+  const [httpStatus, setHttpStatus] = useState('Verificando...')
+  const [mqttConfig, setMqttConfig] = useState(() => MqttModule.getMqttConfig())
+  const [httpConfig, setHttpConfig] = useState(() => {
+    const saved = localStorage.getItem('httpConfig')
+    return saved ? JSON.parse(saved) : {
+      baseUrl: import.meta.env.VITE_SUPABASE_URL || '',
+      apiKey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
+      service: 'supabase',
+    }
+  })
+  const [tempMqttConfig, setTempMqttConfig] = useState(mqttConfig)
+  const [tempHttpConfig, setTempHttpConfig] = useState(httpConfig)
+
   useEffect(() => {
     MqttModule.initMqtt()
     if (MqttModule.client.connected) setMqttStatus('Conectado ✅')
@@ -137,20 +152,6 @@ export default function Dashboard() {
   // ═══════════════════════════════════════════
   // 🔧 LÓGICA — CONFIGURACIÓN MQTT Y HTTP
   // ═══════════════════════════════════════════
-  const [editandoMqtt, setEditandoMqtt] = useState(false)
-  const [editandoHttp, setEditandoHttp] = useState(false)
-  const [httpStatus, setHttpStatus] = useState('Verificando...')
-  const [mqttConfig, setMqttConfig] = useState(() => MqttModule.getMqttConfig())
-  const [httpConfig, setHttpConfig] = useState(() => {
-    const saved = localStorage.getItem('httpConfig')
-    return saved ? JSON.parse(saved) : {
-      baseUrl: import.meta.env.VITE_SUPABASE_URL || '',
-      apiKey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
-      service: 'supabase',
-    }
-  })
-  const [tempMqttConfig, setTempMqttConfig] = useState(mqttConfig)
-  const [tempHttpConfig, setTempHttpConfig] = useState(httpConfig)
 
   useEffect(() => {
     fetch('https://www.google.com/favicon.ico', { mode: 'no-cors' })
