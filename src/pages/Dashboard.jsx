@@ -135,18 +135,27 @@ export default function Dashboard() {
     : '#334155'
 
   const handleToggle = (id) => {
+    if (!MqttModule.client?.connected) {
+      setMqttStatus('Desconectado ⚠️')
+      alert('MQTT no está conectado. Ve a Conexión, guarda la configuración y espera a que salga Conectado.')
+      return
+    }
+
     let topic = '', newState = false
     if (id === 1) {
-      newState = !ledOn; setLedOn(newState); topic = mqttConfig.topicControl || 'led1/control'
-      if (newState) setLedOnCount(c => c + 1); else setLedOffCount(c => c + 1)
+      newState = !ledOn; topic = mqttConfig.topicControl || 'led1/control'
     } else if (id === 2) {
-      newState = !ledOn2; setLedOn2(newState); topic = 'led2/control'
-      if (newState) setLedOnCount2(c => c + 1); else setLedOffCount2(c => c + 1)
+      newState = !ledOn2; topic = 'led2/control'
     } else if (id === 3) {
-      newState = !ledOn3; setLedOn3(newState); topic = 'led3/control'
-      if (newState) setLedOnCount3(c => c + 1); else setLedOffCount3(c => c + 1)
+      newState = !ledOn3; topic = 'led3/control'
     }
-    MqttModule.client.publish(topic, newState ? 'ON' : 'OFF')
+
+    MqttModule.client.publish(topic, newState ? 'ON' : 'OFF', { qos: 0, retain: true }, (err) => {
+      if (err) {
+        setMqttStatus('Error ❌')
+        alert(`No se pudo enviar ${topic}: ${err.message || err}`)
+      }
+    })
   }
 
   // ═══════════════════════════════════════════

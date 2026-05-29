@@ -124,12 +124,6 @@ bool wifiConnected() {
   return WiFi.status() == WL_CONNECTED;
 }
 
-void limpiarEstadosRetenidos() {
-  publicarEstado(TOPIC_LED1_EST, false);
-  publicarEstado(TOPIC_LED2_EST, false);
-  publicarEstado(TOPIC_LED3_EST, false);
-}
-
 bool mqttConnect() {
   if (!wifiConnected()) return false;
 
@@ -140,9 +134,6 @@ bool mqttConnect() {
     mqtt.subscribe(TOPIC_LED2_CTRL);
     mqtt.subscribe(TOPIC_LED3_CTRL);
 
-    canalRojo = canalVerde = canalAzul = false;
-    aplicarRgb();
-    limpiarEstadosRetenidos();
     publicarTodosEstados();
     return true;
   }
