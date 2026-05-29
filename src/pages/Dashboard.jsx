@@ -144,10 +144,16 @@ export default function Dashboard() {
     let topic = '', newState = false
     if (id === 1) {
       newState = !ledOn; topic = mqttConfig.topicControl || 'led1/control'
+      setLedOn(newState)
+      if (newState) setLedOnCount(c => c + 1); else setLedOffCount(c => c + 1)
     } else if (id === 2) {
       newState = !ledOn2; topic = 'led2/control'
+      setLedOn2(newState)
+      if (newState) setLedOnCount2(c => c + 1); else setLedOffCount2(c => c + 1)
     } else if (id === 3) {
       newState = !ledOn3; topic = 'led3/control'
+      setLedOn3(newState)
+      if (newState) setLedOnCount3(c => c + 1); else setLedOffCount3(c => c + 1)
     }
 
     MqttModule.client.publish(topic, newState ? 'ON' : 'OFF', { qos: 0, retain: true }, (err) => {
