@@ -66,104 +66,109 @@ export default function Dashboard() {
   // 🔧 LÓGICA — BOMBILLOS Y MQTT
   // ═══════════════════════════════════════════
   const [ledOn, setLedOn] = useState(false)
-  const [ledOn2, setLedOn2] = useState(false)
-  const [ledOn3, setLedOn3] = useState(false)
-  const [ledOnCount, setLedOnCount] = useState(0)
-  const [ledOffCount, setLedOffCount] = useState(0)
-  const [ledOnCount2, setLedOnCount2] = useState(0)
-  const [ledOffCount2, setLedOffCount2] = useState(0)
-  const [ledOnCount3, setLedOnCount3] = useState(0)
-  const [ledOffCount3, setLedOffCount3] = useState(0)
-  const [mqttStatus, setMqttStatus] = useState('Conectando...')
+const [ledOn2, setLedOn2] = useState(false)
+const [ledOn3, setLedOn3] = useState(false)
+const [ledOnCount, setLedOnCount] = useState(0)
+const [ledOffCount, setLedOffCount] = useState(0)
+const [ledOnCount2, setLedOnCount2] = useState(0)
+const [ledOffCount2, setLedOffCount2] = useState(0)
+const [ledOnCount3, setLedOnCount3] = useState(0)
+const [ledOffCount3, setLedOffCount3] = useState(0)
+const [mqttStatus, setMqttStatus] = useState('Conectando...')
 
-  const [editandoMqtt, setEditandoMqtt] = useState(false)
-  const [editandoHttp, setEditandoHttp] = useState(false)
-  const [httpStatus, setHttpStatus] = useState('Verificando...')
-  const [mqttConfig, setMqttConfig] = useState(() => MqttModule.getMqttConfig())
-  const [httpConfig, setHttpConfig] = useState(() => {
-    const saved = localStorage.getItem('httpConfig')
-    return saved ? JSON.parse(saved) : {
-      baseUrl: import.meta.env.VITE_SUPABASE_URL || '',
-      apiKey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
-      service: 'supabase',
-    }
-  })
-  const [tempMqttConfig, setTempMqttConfig] = useState(mqttConfig)
-  const [tempHttpConfig, setTempHttpConfig] = useState(httpConfig)
+const [editandoMqtt, setEditandoMqtt] = useState(false)
+const [editandoHttp, setEditandoHttp] = useState(false)
+const [httpStatus, setHttpStatus] = useState('Verificando...')
+const [mqttConfig, setMqttConfig] = useState(() => MqttModule.getMqttConfig())
+const [httpConfig, setHttpConfig] = useState(() => {
+  const saved = localStorage.getItem('httpConfig')
+  return saved ? JSON.parse(saved) : {
+    baseUrl: import.meta.env.VITE_SUPABASE_URL || '',
+    apiKey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
+    service: 'supabase',
+  }
+})
+const [tempMqttConfig, setTempMqttConfig] = useState(mqttConfig)
+const [tempHttpConfig, setTempHttpConfig] = useState(httpConfig)
 
-  useEffect(() => {
-    MqttModule.initMqtt()
-    if (MqttModule.client.connected) setMqttStatus('Conectado ✅')
-    const handler = (topic, message) => {
-      const msg = message.toString().trim().toUpperCase()
-      const encendido = msg === 'ON' || msg === '1' || msg === 'TRUE'
-      const tEstado1 = mqttConfig.topicEstado || 'led1/estado'
-      if (topic === tEstado1) setLedOn(encendido)
-      else if (topic === 'led2/estado') setLedOn2(encendido)
-      else if (topic === 'led3/estado') setLedOn3(encendido)
-    }
-    const onConnect = () => setMqttStatus('Conectado ✅')
-    const onError = () => setMqttStatus('Error ❌')
-    const onOffline = () => setMqttStatus('Desconectado ⚠️')
-    
-    const activeClient = MqttModule.client
-    activeClient.on('message', handler)
-    activeClient.on('connect', onConnect)
-    activeClient.on('error', onError)
-    activeClient.on('offline', onOffline)
-    return () => {
-      activeClient.off('message', handler)
-      activeClient.off('connect', onConnect)
-      activeClient.off('error', onError)
-      activeClient.off('offline', onOffline)
-    }
-  }, [mqttConfig])
+useEffect(() => {
+  MqttModule.initMqtt()
+  if (MqttModule.client.connected) setMqttStatus('Conectado ✅')
 
-  const BOMBILLOS = [
-    { id: 1, label: 'Bombillo 1 — Sala', color: '#ef4444', colorName: 'Rojo', r: 239, g: 68, b: 68, pin: 'D7 (R)', on: ledOn, onCount: ledOnCount, offCount: ledOffCount },
-    { id: 2, label: 'Bombillo 2 — Cocina', color: '#22c55e', colorName: 'Verde', r: 34, g: 197, b: 94, pin: 'D5 (G)', on: ledOn2, onCount: ledOnCount2, offCount: ledOffCount2 },
-    { id: 3, label: 'Bombillo 3 — Patio', color: '#2563eb', colorName: 'Azul', r: 37, g: 99, b: 235, pin: 'D3 (B)', on: ledOn3, onCount: ledOnCount3, offCount: ledOffCount3 },
-  ]
-
-  const rgbActivo = ledOn || ledOn2 || ledOn3
-  const rgbMix = BOMBILLOS.reduce(
-    (acc, b) => (b.on ? { r: acc.r + b.r, g: acc.g + b.g, b: acc.b + b.b } : acc),
-    { r: 0, g: 0, b: 0 }
-  )
-  const rgbColor = rgbActivo
-    ? `rgb(${Math.min(rgbMix.r, 255)}, ${Math.min(rgbMix.g, 255)}, ${Math.min(rgbMix.b, 255)})`
-    : '#334155'
-
-  const handleToggle = (id) => {
-    if (!MqttModule.client?.connected) {
-      setMqttStatus('Desconectado ⚠️')
-      alert('MQTT no está conectado. Ve a Conexión, guarda la configuración y espera a que salga Conectado.')
-      return
-    }
-
-    let topic = '', newState = false
-    if (id === 1) {
-      newState = !ledOn; topic = mqttConfig.topicControl || 'led1/control'
-      setLedOn(newState)
-      if (newState) setLedOnCount(c => c + 1); else setLedOffCount(c => c + 1)
-    } else if (id === 2) {
-      newState = !ledOn2; topic = 'led2/control'
-      setLedOn2(newState)
-      if (newState) setLedOnCount2(c => c + 1); else setLedOffCount2(c => c + 1)
-    } else if (id === 3) {
-      newState = !ledOn3; topic = 'led3/control'
-      setLedOn3(newState)
-      if (newState) setLedOnCount3(c => c + 1); else setLedOffCount3(c => c + 1)
-    }
-
-    MqttModule.client.publish(topic, newState ? 'ON' : 'OFF', { qos: 0, retain: true }, (err) => {
-      if (err) {
-        setMqttStatus('Error ❌')
-        alert(`No se pudo enviar ${topic}: ${err.message || err}`)
-      }
-    })
+  const handler = (topic, message) => {
+    const msg = message.toString().trim().toUpperCase()
+    const encendido = msg === 'ON' || msg === '1' || msg === 'TRUE'
+    if (topic === 'led1/estado') setLedOn(encendido)
+    else if (topic === 'led2/estado') setLedOn2(encendido)
+    else if (topic === 'led3/estado') setLedOn3(encendido)
   }
 
+  const onConnect = () => setMqttStatus('Conectado ✅')
+  const onError = () => setMqttStatus('Error ❌')
+  const onOffline = () => setMqttStatus('Desconectado ⚠️')
+
+  const activeClient = MqttModule.client
+  activeClient.on('message', handler)
+  activeClient.on('connect', onConnect)
+  activeClient.on('error', onError)
+  activeClient.on('offline', onOffline)
+
+  return () => {
+    activeClient.off('message', handler)
+    activeClient.off('connect', onConnect)
+    activeClient.off('error', onError)
+    activeClient.off('offline', onOffline)
+  }
+}, [mqttConfig])
+
+const BOMBILLOS = [
+  { id: 1, label: 'Bombillo 1 — Sala', color: '#ef4444', colorName: 'Rojo', r: 239, g: 68, b: 68, pin: 'D7 (R)', on: ledOn, onCount: ledOnCount, offCount: ledOffCount },
+  { id: 2, label: 'Bombillo 2 — Cocina', color: '#22c55e', colorName: 'Verde', r: 34, g: 197, b: 94, pin: 'D5 (G)', on: ledOn2, onCount: ledOnCount2, offCount: ledOffCount2 },
+  { id: 3, label: 'Bombillo 3 — Patio', color: '#2563eb', colorName: 'Azul', r: 37, g: 99, b: 235, pin: 'D3 (B)', on: ledOn3, onCount: ledOnCount3, offCount: ledOffCount3 },
+]
+
+const rgbActivo = ledOn || ledOn2 || ledOn3
+const rgbMix = BOMBILLOS.reduce(
+  (acc, b) => (b.on ? { r: acc.r + b.r, g: acc.g + b.g, b: acc.b + b.b } : acc),
+  { r: 0, g: 0, b: 0 }
+)
+const rgbColor = rgbActivo
+  ? `rgb(${Math.min(rgbMix.r, 255)}, ${Math.min(rgbMix.g, 255)}, ${Math.min(rgbMix.b, 255)})`
+  : '#334155'
+
+const handleToggle = (id) => {
+  if (!MqttModule.client?.connected) {
+    setMqttStatus('Desconectado ⚠️')
+    alert('MQTT no está conectado. Ve a Conexión, guarda la configuración y espera a que salga Conectado.')
+    return
+  }
+
+  let topic = '', newState = false
+
+  if (id === 1) {
+    newState = !ledOn
+    topic = 'led1/control'
+    setLedOn(newState)
+    if (newState) setLedOnCount(c => c + 1); else setLedOffCount(c => c + 1)
+  } else if (id === 2) {
+    newState = !ledOn2
+    topic = 'led2/control'
+    setLedOn2(newState)
+    if (newState) setLedOnCount2(c => c + 1); else setLedOffCount2(c => c + 1)
+  } else if (id === 3) {
+    newState = !ledOn3
+    topic = 'led3/control'
+    setLedOn3(newState)
+    if (newState) setLedOnCount3(c => c + 1); else setLedOffCount3(c => c + 1)
+  }
+
+  MqttModule.client.publish(topic, newState ? 'ON' : 'OFF', { qos: 0, retain: true }, (err) => {
+    if (err) {
+      setMqttStatus('Error ❌')
+      alert(`No se pudo enviar ${topic}: ${err.message || err}`)
+    }
+  })
+}
   // ═══════════════════════════════════════════
   // 🔧 LÓGICA — CONFIGURACIÓN MQTT Y HTTP
   // ═══════════════════════════════════════════
