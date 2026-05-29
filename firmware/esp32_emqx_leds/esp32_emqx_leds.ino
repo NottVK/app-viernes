@@ -62,6 +62,23 @@ void aplicarRgb() {
   digitalWrite(PIN_AZUL,  canalAzul  ? HIGH : LOW);
 }
 
+void probarRgbInicio() {
+  digitalWrite(PIN_ROJO, HIGH);
+  digitalWrite(PIN_VERDE, LOW);
+  digitalWrite(PIN_AZUL, LOW);
+  delay(600);
+  digitalWrite(PIN_ROJO, LOW);
+  digitalWrite(PIN_VERDE, HIGH);
+  digitalWrite(PIN_AZUL, LOW);
+  delay(600);
+  digitalWrite(PIN_ROJO, LOW);
+  digitalWrite(PIN_VERDE, LOW);
+  digitalWrite(PIN_AZUL, HIGH);
+  delay(600);
+  canalRojo = canalVerde = canalAzul = false;
+  aplicarRgb();
+}
+
 void publicarEstado(const char* topic, bool on) {
   if (mqtt.connected()) mqtt.publish(topic, on ? "ON" : "OFF", true);
 }
@@ -151,6 +168,7 @@ void setup() {
 
   canalRojo = canalVerde = canalAzul = false;
   aplicarRgb();  // RGB apagado al iniciar
+  probarRgbInicio();
 
   clientId = "ESP32_";
   clientId += String((uint32_t)ESP.getEfuseMac(), HEX);
