@@ -27,10 +27,10 @@ const char* TOPIC_LED2_EST  = "led2/estado";
 const char* TOPIC_LED3_CTRL = "led3/control";
 const char* TOPIC_LED3_EST  = "led3/estado";
 
-// LED RGB: Bombillo1=Rojo GPIO27 | Bombillo2=Verde GPIO5 | Bombillo3=Azul GPIO3
+// LED RGB: Bombillo1=Rojo GPIO27 | Bombillo2=Verde GPIO25 | Bombillo3=Azul GPIO23
 const int PIN_ROJO  = 27;
-const int PIN_VERDE = 5;
-const int PIN_AZUL  = 3;
+const int PIN_VERDE = 25;
+const int PIN_AZUL  = 23;
 
 const unsigned long RECONNECT_WIFI_MS = 10000;
 const unsigned long RECONNECT_MQTT_MS = 5000;
@@ -50,6 +50,8 @@ String readPayload(byte* payload, unsigned int length) {
   String msg;
   msg.reserve(length);
   for (unsigned int i = 0; i < length; i++) msg += (char)payload[i];
+  msg.trim();
+  msg.toUpperCase();
   return msg;
 }
 
@@ -61,7 +63,7 @@ void aplicarRgb() {
 }
 
 void publicarEstado(const char* topic, bool on) {
-  mqtt.publish(topic, on ? "ON" : "OFF", true);
+  if (mqtt.connected()) mqtt.publish(topic, on ? "ON" : "OFF", true);
 }
 
 void publicarTodosEstados() {
@@ -74,7 +76,7 @@ void setCanal(bool& canal, bool on, const char* estadoTopic) {
   canal = on;
   aplicarRgb();
   publicarEstado(estadoTopic, on);
-  Serial.printf("RGB → R:%d G:%d B:%d\n", canalRojo, canalVerde, canalAzul);
+  Serial.printf("RGB -> R:%d G:%d B:%d\n", canalRojo, canalVerde, canalAzul);
 }
 
 void onMqttMessage(char* topic, byte* payload, unsigned int length) {
@@ -106,15 +108,15 @@ bool wifiConnected() {
 }
 
 void limpiarEstadosRetenidos() {
-  mqtt.publish(TOPIC_LED1_EST, "OFF", true);
-  mqtt.publish(TOPIC_LED2_EST, "OFF", true);
-  mqtt.publish(TOPIC_LED3_EST, "OFF", true);
+  publicarEstado(TOPIC_LED1_EST, false);
+  publicarEstado(TOPIC_LED2_EST, false);
+  publicarEstado(TOPIC_LED3_EST, false);
 }
 
 bool mqttConnect() {
   if (!wifiConnected()) return false;
 
-  Serial.print("MQTT → ");
+  Serial.print("MQTT -> ");
   if (mqtt.connect(clientId.c_str(), MQTT_USER, MQTT_PASS)) {
     Serial.println("OK");
     mqtt.subscribe(TOPIC_LED1_CTRL);
@@ -157,7 +159,7 @@ void setup() {
   startWifi();
 
   Serial.println("=== ESP32 LED RGB + EMQX ===");
-  Serial.println("R→GPIO27 | G→GPIO5 | B→GPIO3 | Inicio: APAGADO");
+  Serial.println("R->GPIO27 | G->GPIO25 | B->GPIO23 | Inicio: APAGADO");
 }
 
 void loop() {

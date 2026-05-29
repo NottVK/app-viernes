@@ -14,8 +14,8 @@ Host: `c4631a6a.ala.eu-central-1.emqxsl.com`
 | Bombillo | Color  | GPIO ESP32 |
 |----------|--------|------------|
 | 1        | Rojo   | GPIO 27    |
-| 2        | Verde  | GPIO 5     |
-| 3        | Azul   | GPIO 3     |
+| 2        | Verde  | GPIO 25    |
+| 3        | Azul   | GPIO 23    |
 
 Al iniciar el RGB está **apagado**. Cada botón de la app enciende solo su color.
 

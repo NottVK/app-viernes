@@ -121,8 +121,8 @@ export default function Dashboard() {
 
   const BOMBILLOS = [
     { id: 1, label: 'Bombillo 1 — Sala', color: '#ef4444', colorName: 'Rojo', r: 239, g: 68, b: 68, pin: 'D27 (R)', on: ledOn, onCount: ledOnCount, offCount: ledOffCount },
-    { id: 2, label: 'Bombillo 2 — Cocina', color: '#22c55e', colorName: 'Verde', r: 34, g: 197, b: 94, pin: 'D5 (G)', on: ledOn2, onCount: ledOnCount2, offCount: ledOffCount2 },
-    { id: 3, label: 'Bombillo 3 — Patio', color: '#2563eb', colorName: 'Azul', r: 37, g: 99, b: 235, pin: 'D3 (B)', on: ledOn3, onCount: ledOnCount3, offCount: ledOffCount3 },
+    { id: 2, label: 'Bombillo 2 — Cocina', color: '#22c55e', colorName: 'Verde', r: 34, g: 197, b: 94, pin: 'D25 (G)', on: ledOn2, onCount: ledOnCount2, offCount: ledOffCount2 },
+    { id: 3, label: 'Bombillo 3 — Patio', color: '#2563eb', colorName: 'Azul', r: 37, g: 99, b: 235, pin: 'D23 (B)', on: ledOn3, onCount: ledOnCount3, offCount: ledOffCount3 },
   ]
 
   const rgbActivo = ledOn || ledOn2 || ledOn3
@@ -751,7 +751,7 @@ export default function Dashboard() {
             <div style={{ padding: '40px 20px', maxWidth: '600px', margin: '0 auto' }}>
               <div style={{ textAlign: 'center', marginBottom: '32px' }}>
                 <div style={{ fontSize: '28px', fontWeight: '700', color: theme.text }}>Control de Bombillos</div>
-                <div style={{ color: theme.textMuted, marginTop: '8px' }}>LED RGB — R→D27 · G→D5 · B→D3</div>
+                <div style={{ color: theme.textMuted, marginTop: '8px' }}>LED RGB — R→D27 · G→D25 · B→D23</div>
               </div>
 
               <div style={{ background: theme.card, borderRadius: '20px', padding: '24px', border: `1px solid ${theme.border}`, marginBottom: '24px', textAlign: 'center' }}>
