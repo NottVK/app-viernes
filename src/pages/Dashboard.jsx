@@ -122,7 +122,7 @@ useEffect(() => {
 }, [mqttConfig])
 
 const BOMBILLOS = [
-  { id: 1, label: 'Bombillo 1 — Sala', color: '#ef4444', colorName: 'Rojo', r: 239, g: 68, b: 68, pin: 'D7 (R)', on: ledOn, onCount: ledOnCount, offCount: ledOffCount },
+  { id: 1, label: 'Bombillo 1 — Sala', color: '#ef4444', colorName: 'Rojo', r: 239, g: 68, b: 68, pin: 'D4 (R)', on: ledOn, onCount: ledOnCount, offCount: ledOffCount },
   { id: 2, label: 'Bombillo 2 — Cocina', color: '#22c55e', colorName: 'Verde', r: 34, g: 197, b: 94, pin: 'D5 (G)', on: ledOn2, onCount: ledOnCount2, offCount: ledOffCount2 },
   { id: 3, label: 'Bombillo 3 — Patio', color: '#2563eb', colorName: 'Azul', r: 37, g: 99, b: 235, pin: 'D3 (B)', on: ledOn3, onCount: ledOnCount3, offCount: ledOffCount3 },
 ]
@@ -149,25 +149,46 @@ const handleToggle = (id) => {
     newState = !ledOn
     topic = 'led1/control'
     setLedOn(newState)
+    setLedOn2(false)
+    setLedOn3(false)
     if (newState) setLedOnCount(c => c + 1); else setLedOffCount(c => c + 1)
   } else if (id === 2) {
     newState = !ledOn2
     topic = 'led2/control'
     setLedOn2(newState)
+    setLedOn(false)
+    setLedOn3(false)
     if (newState) setLedOnCount2(c => c + 1); else setLedOffCount2(c => c + 1)
   } else if (id === 3) {
     newState = !ledOn3
     topic = 'led3/control'
     setLedOn3(newState)
+    setLedOn(false)
+    setLedOn2(false)
     if (newState) setLedOnCount3(c => c + 1); else setLedOffCount3(c => c + 1)
   }
 
+  // Publicar al canal seleccionado
   MqttModule.client.publish(topic, newState ? 'ON' : 'OFF', { qos: 0, retain: true }, (err) => {
     if (err) {
       setMqttStatus('Error ❌')
       alert(`No se pudo enviar ${topic}: ${err.message || err}`)
     }
   })
+
+  // Si se enciende un canal, apagar los otros dos
+  if (newState) {
+    if (id === 1) {
+      MqttModule.client.publish('led2/control', 'OFF', { qos: 0, retain: true })
+      MqttModule.client.publish('led3/control', 'OFF', { qos: 0, retain: true })
+    } else if (id === 2) {
+      MqttModule.client.publish('led1/control', 'OFF', { qos: 0, retain: true })
+      MqttModule.client.publish('led3/control', 'OFF', { qos: 0, retain: true })
+    } else if (id === 3) {
+      MqttModule.client.publish('led1/control', 'OFF', { qos: 0, retain: true })
+      MqttModule.client.publish('led2/control', 'OFF', { qos: 0, retain: true })
+    }
+  }
 }
   // ═══════════════════════════════════════════
   // 🔧 LÓGICA — CONFIGURACIÓN MQTT Y HTTP

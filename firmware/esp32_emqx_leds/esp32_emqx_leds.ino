@@ -1,8 +1,8 @@
 /**
- * ESP32 + EMQX Cloud + LED RGB (cátodo común en Wokwi)
+ * ESP32 + EMQX Cloud + LED RGB (Corregido: Un solo color a la vez)
  *
- * Pines ESP32:  Rojo→GPIO7  |  Verde→GPIO5  |  Azul→GPIO3
- * Apagado por defecto. Cada bombillo de la app enciende su canal.
+ * Pines ESP32:  Rojo→GPIO4  |  Verde→GPIO5  |  Azul→GPIO3
+ * Apagado por defecto. Cada canal es exclusivo (no se mezcla en blanco).
  *
  * App → led1/control, led2/control, led3/control (ON|OFF)
  * ESP32 → led1/estado, led2/estado, led3/estado
@@ -12,8 +12,8 @@
 #include <WiFiClientSecure.h>
 #include <PubSubClient.h>
 
-const char* WIFI_SSID = "Wokwi-GUEST";
-const char* WIFI_PASS = "";
+const char* WIFI_SSID = "Funcionarios";
+const char* WIFI_PASS = "SomosSena_2025";
 
 const char* MQTT_HOST = "c4631a6a.ala.eu-central-1.emqxsl.com";
 const int   MQTT_PORT = 8883;
@@ -27,8 +27,8 @@ const char* TOPIC_LED2_EST  = "led2/estado";
 const char* TOPIC_LED3_CTRL = "led3/control";
 const char* TOPIC_LED3_EST  = "led3/estado";
 
-// LED RGB: Bombillo1=Rojo GPIO7 | Bombillo2=Verde GPIO5 | Bombillo3=Azul GPIO3
-const int PIN_ROJO  = 7;
+// LED RGB: Bombillo1=Rojo GPIO4 | Bombillo2=Verde GPIO5 | Bombillo3=Azul GPIO3
+const int PIN_ROJO  = 4;
 const int PIN_VERDE = 5;
 const int PIN_AZUL  = 3;
 
@@ -46,6 +46,10 @@ bool canalRojo  = false;
 bool canalVerde = false;
 bool canalAzul  = false;
 
+// Lógica para Cátodo Común (HIGH enciende, LOW apaga)
+const int LED_ON = HIGH;
+const int LED_OFF = LOW;
+
 String readPayload(byte* payload, unsigned int length) {
   String msg;
   msg.reserve(length);
@@ -55,28 +59,11 @@ String readPayload(byte* payload, unsigned int length) {
   return msg;
 }
 
-/** Aplica el color al LED RGB físico (todos LOW = apagado). */
+/** Aplica el color al LED RGB físico. */
 void aplicarRgb() {
-  digitalWrite(PIN_ROJO,  canalRojo  ? HIGH : LOW);
-  digitalWrite(PIN_VERDE, canalVerde ? HIGH : LOW);
-  digitalWrite(PIN_AZUL,  canalAzul  ? HIGH : LOW);
-}
-
-void probarRgbInicio() {
-  digitalWrite(PIN_ROJO, HIGH);
-  digitalWrite(PIN_VERDE, LOW);
-  digitalWrite(PIN_AZUL, LOW);
-  delay(600);
-  digitalWrite(PIN_ROJO, LOW);
-  digitalWrite(PIN_VERDE, HIGH);
-  digitalWrite(PIN_AZUL, LOW);
-  delay(600);
-  digitalWrite(PIN_ROJO, LOW);
-  digitalWrite(PIN_VERDE, LOW);
-  digitalWrite(PIN_AZUL, HIGH);
-  delay(600);
-  canalRojo = canalVerde = canalAzul = false;
-  aplicarRgb();
+  digitalWrite(PIN_ROJO,  canalRojo  ? LED_ON : LED_OFF);
+  digitalWrite(PIN_VERDE, canalVerde ? LED_ON : LED_OFF);
+  digitalWrite(PIN_AZUL,  canalAzul  ? LED_ON : LED_OFF);
 }
 
 void publicarEstado(const char* topic, bool on) {
@@ -89,16 +76,28 @@ void publicarTodosEstados() {
   publicarEstado(TOPIC_LED3_EST, canalAzul);
 }
 
+/** Modificado: Fuerza exclusividad de un solo color a la vez */
 void setCanal(bool& canal, bool on, const char* estadoTopic) {
   if (on) {
-    canalRojo = false;
+    // Si se enciende un color, OBLIGATORIAMENTE apagamos todos los demás primero
+    canalRojo  = false;
     canalVerde = false;
-    canalAzul = false;
+    canalAzul  = false;
+    
+    // Encendemos únicamente el canal solicitado
+    canal = true; 
+  } else {
+    // Si la orden es apagar (OFF), simplemente apagamos este canal
+    canal = false;
   }
-  canal = on;
+
+  // Aplicamos los cambios físicos en los pines del ESP32
   aplicarRgb();
+  
+  // Sincronizamos la app enviando el estado real actual de los 3 canales
   publicarTodosEstados();
-  Serial.printf("RGB -> R:%d G:%d B:%d\n", canalRojo, canalVerde, canalAzul);
+  
+  Serial.printf("RGB Único -> R:%d G:%d B:%d\n", canalRojo, canalVerde, canalAzul);
 }
 
 void onMqttMessage(char* topic, byte* payload, unsigned int length) {
@@ -157,14 +156,24 @@ void setupMqtt() {
 void setup() {
   Serial.begin(115200);
   delay(300);
+  Serial.println("--- Sistema de monitoreo iniciado ---");
+  Serial.println("--- Intentando conectar a la red WiFi... ---");
 
+  // 1. Forzamos estado apagado (LOW) antes de habilitar las salidas
+  digitalWrite(PIN_ROJO, LOW);
+  digitalWrite(PIN_VERDE, LOW);
+  digitalWrite(PIN_AZUL, LOW);
+
+  // 2. Configuramos los pines como salida
   pinMode(PIN_ROJO, OUTPUT);
   pinMode(PIN_VERDE, OUTPUT);
   pinMode(PIN_AZUL, OUTPUT);
 
+  // Variables iniciales en falso y pines aplicados para inicio totalmente apagado
   canalRojo = canalVerde = canalAzul = false;
-  aplicarRgb();  // RGB apagado al iniciar
-  probarRgbInicio();
+  aplicarRgb(); 
+
+  // Se eliminó probarRgbInicio() para erradicar el parpadeo de colores en el arranque
 
   clientId = "ESP32_";
   clientId += String((uint32_t)ESP.getEfuseMac(), HEX);
@@ -173,7 +182,7 @@ void setup() {
   startWifi();
 
   Serial.println("=== ESP32 LED RGB + EMQX ===");
-  Serial.println("R->GPIO7 | G->GPIO5 | B->GPIO3 | Inicio: APAGADO");
+  Serial.println("R->GPIO4 | G->GPIO5 | B->GPIO3 | Inicio: APAGADO EXCLUSIVO");
 }
 
 void loop() {

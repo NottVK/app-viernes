@@ -9,7 +9,7 @@
       "id": "rgb1",
       "top": -90,
       "left": 210,
-      "attrs": { "common": "cathode" }
+      "attrs": { "common": "anode" }
     },
     {
       "type": "wokwi-resistor",

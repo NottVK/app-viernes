@@ -13,7 +13,7 @@ Host: `c4631a6a.ala.eu-central-1.emqxsl.com`
 
 | Bombillo | Color  | GPIO ESP32 |
 |----------|--------|------------|
-| 1        | Rojo   | GPIO 7     |
+| 1        | Rojo   | GPIO 4     |
 | 2        | Verde  | GPIO 5     |
 | 3        | Azul   | GPIO 3     |
 
