@@ -15,7 +15,7 @@ export default function Dashboard() {
   const navigate = useNavigate()
 
   // ═══════════════════════════════════════════
-  // 🔧 LÓGICA — TEMA Y RESPONSIVE
+  // 🔧 LÓGICA — DETECCIÓN DE PLATAFORMA
   // ═══════════════════════════════════════════
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   useEffect(() => {
@@ -25,10 +25,13 @@ export default function Dashboard() {
   }, [])
 
   // ═══════════════════════════════════════════
-  // 🔧 LÓGICA — USUARIO Y PERFIL
+  // 🔧 LÓGICA — AUTENTICACIÓN Y PERFIL
   // ═══════════════════════════════════════════
   const [user, setUser] = useState(null)
   const [perfil, setPerfil] = useState(null)
+  const [showUserInfo, setShowUserInfo] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  
   useEffect(() => {
     const getUser = async () => {
       const { data } = await supabase.auth.getUser()
@@ -41,23 +44,24 @@ export default function Dashboard() {
     }
     getUser()
   }, [])
+  
   const nombre = perfil?.nombre || user?.email?.split('@')[0] || 'Usuario'
   const apellido = perfil?.apellido || ''
   const iniciales = (nombre[0] + (apellido[0] || nombre[1] || '')).toUpperCase()
   const fotoUrl = perfil?.foto_url
+  
   const handleLogout = async () => {
     await supabase.auth.signOut()
     navigate('/login')
   }
 
   // ═══════════════════════════════════════════
-  // 🔧 LÓGICA — SIDEBAR Y NAVEGACIÓN
+  // 🔧 LÓGICA — NAVEGACIÓN Y TEMA
   // ═══════════════════════════════════════════
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeSection, setActiveSection] = useState(isApk ? 'bombillos' : 'dashboard')
-  const [showUserInfo, setShowUserInfo] = useState(false)
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [darkMode, setDarkMode] = useState(false)
+  
   const allNavItems = [
     { id: 'dashboard', icon: '⊞', label: 'Dashboard' },
     { id: 'bombillos', icon: '💡', label: 'Bombillos' },
@@ -69,143 +73,157 @@ export default function Dashboard() {
   const navItems = isMobile ? allNavItems.filter((item) => item.id !== 'config') : allNavItems
 
   // ═══════════════════════════════════════════
-  // 🔧 LÓGICA — BOMBILLOS Y MQTT
+  // 🔧 LÓGICA — ESTADO DE BOMBILLOS (LEDs)
   // ═══════════════════════════════════════════
   const [ledOn, setLedOn] = useState(false)
-const [ledOn2, setLedOn2] = useState(false)
-const [ledOn3, setLedOn3] = useState(false)
-const [ledOnCount, setLedOnCount] = useState(0)
-const [ledOffCount, setLedOffCount] = useState(0)
-const [ledOnCount2, setLedOnCount2] = useState(0)
-const [ledOffCount2, setLedOffCount2] = useState(0)
-const [ledOnCount3, setLedOnCount3] = useState(0)
-const [ledOffCount3, setLedOffCount3] = useState(0)
-const [mqttStatus, setMqttStatus] = useState('Conectando...')
+  const [ledOn2, setLedOn2] = useState(false)
+  const [ledOn3, setLedOn3] = useState(false)
+  const [ledOnCount, setLedOnCount] = useState(0)
+  const [ledOffCount, setLedOffCount] = useState(0)
+  const [ledOnCount2, setLedOnCount2] = useState(0)
+  const [ledOffCount2, setLedOffCount2] = useState(0)
+  const [ledOnCount3, setLedOnCount3] = useState(0)
+  const [ledOffCount3, setLedOffCount3] = useState(0)
 
-const [editandoMqtt, setEditandoMqtt] = useState(false)
-const [editandoHttp, setEditandoHttp] = useState(false)
-const [httpStatus, setHttpStatus] = useState('Verificando...')
-const [mqttConfig, setMqttConfig] = useState(() => MqttModule.getMqttConfig())
-const [httpConfig, setHttpConfig] = useState(() => {
-  const saved = localStorage.getItem('httpConfig')
-  return saved ? JSON.parse(saved) : {
-    baseUrl: import.meta.env.VITE_SUPABASE_URL || '',
-    apiKey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
-    service: 'supabase',
-  }
-})
-const [tempMqttConfig, setTempMqttConfig] = useState(mqttConfig)
-const [tempHttpConfig, setTempHttpConfig] = useState(httpConfig)
-
-useEffect(() => {
-  MqttModule.initMqtt()
-  if (MqttModule.client.connected) setMqttStatus('Conectado ✅')
-
-  const handler = (topic, message) => {
-    const msg = message.toString().trim().toUpperCase()
-    const encendido = msg === 'ON' || msg === '1' || msg === 'TRUE'
-    if (topic === 'led1/estado') setLedOn(encendido)
-    else if (topic === 'led2/estado') setLedOn2(encendido)
-    else if (topic === 'led3/estado') setLedOn3(encendido)
-  }
-
-  const onConnect = () => setMqttStatus('Conectado ✅')
-  const onError = () => setMqttStatus('Error ❌')
-  const onOffline = () => setMqttStatus('Desconectado ⚠️')
-
-  const activeClient = MqttModule.client
-  activeClient.on('message', handler)
-  activeClient.on('connect', onConnect)
-  activeClient.on('error', onError)
-  activeClient.on('offline', onOffline)
-
-  return () => {
-    activeClient.off('message', handler)
-    activeClient.off('connect', onConnect)
-    activeClient.off('error', onError)
-    activeClient.off('offline', onOffline)
-  }
-}, [mqttConfig])
-
-const BOMBILLOS = [
-  { id: 1, label: 'Bombillo 1 — Sala', color: '#ef4444', colorName: 'Rojo', r: 239, g: 68, b: 68, pin: 'D4 (R)', on: ledOn, onCount: ledOnCount, offCount: ledOffCount },
-  { id: 2, label: 'Bombillo 2 — Cocina', color: '#22c55e', colorName: 'Verde', r: 34, g: 197, b: 94, pin: 'D5 (G)', on: ledOn2, onCount: ledOnCount2, offCount: ledOffCount2 },
-  { id: 3, label: 'Bombillo 3 — Patio', color: '#2563eb', colorName: 'Azul', r: 37, g: 99, b: 235, pin: 'D3 (B)', on: ledOn3, onCount: ledOnCount3, offCount: ledOffCount3 },
-]
-
-const rgbActivo = ledOn || ledOn2 || ledOn3
-const rgbMix = BOMBILLOS.reduce(
-  (acc, b) => (b.on ? { r: acc.r + b.r, g: acc.g + b.g, b: acc.b + b.b } : acc),
-  { r: 0, g: 0, b: 0 }
-)
-const rgbColor = rgbActivo
-  ? `rgb(${Math.min(rgbMix.r, 255)}, ${Math.min(rgbMix.g, 255)}, ${Math.min(rgbMix.b, 255)})`
-  : '#334155'
-
-const handleToggle = (id) => {
-  if (!MqttModule.client?.connected) {
-    setMqttStatus('Desconectado ⚠️')
-    alert('MQTT no está conectado. Ve a Conexión, guarda la configuración y espera a que salga Conectado.')
-    return
-  }
-
-  let topic = '', newState = false
-
-  if (id === 1) {
-    newState = !ledOn
-    topic = 'led1/control'
-    setLedOn(newState)
-    setLedOn2(false)
-    setLedOn3(false)
-    if (newState) setLedOnCount(c => c + 1); else setLedOffCount(c => c + 1)
-  } else if (id === 2) {
-    newState = !ledOn2
-    topic = 'led2/control'
-    setLedOn2(newState)
-    setLedOn(false)
-    setLedOn3(false)
-    if (newState) setLedOnCount2(c => c + 1); else setLedOffCount2(c => c + 1)
-  } else if (id === 3) {
-    newState = !ledOn3
-    topic = 'led3/control'
-    setLedOn3(newState)
-    setLedOn(false)
-    setLedOn2(false)
-    if (newState) setLedOnCount3(c => c + 1); else setLedOffCount3(c => c + 1)
-  }
-
-  // Publicar al canal seleccionado
-  MqttModule.client.publish(topic, newState ? 'ON' : 'OFF', { qos: 0, retain: true }, (err) => {
-    if (err) {
-      setMqttStatus('Error ❌')
-      alert(`No se pudo enviar ${topic}: ${err.message || err}`)
+  // ═══════════════════════════════════════════
+  // 🔧 LÓGICA — CONEXIÓN MQTT Y HTTP
+  // ═══════════════════════════════════════════
+  const [mqttStatus, setMqttStatus] = useState('Conectando...')
+  const [httpStatus, setHttpStatus] = useState('Verificando...')
+  const [mqttConfig, setMqttConfig] = useState(() => MqttModule.getMqttConfig())
+  const [httpConfig, setHttpConfig] = useState(() => {
+    const saved = localStorage.getItem('httpConfig')
+    return saved ? JSON.parse(saved) : {
+      baseUrl: import.meta.env.VITE_SUPABASE_URL || '',
+      apiKey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
+      service: 'supabase',
     }
   })
+  const [editandoMqtt, setEditandoMqtt] = useState(false)
+  const [editandoHttp, setEditandoHttp] = useState(false)
+  const [tempMqttConfig, setTempMqttConfig] = useState(mqttConfig)
+  const [tempHttpConfig, setTempHttpConfig] = useState(httpConfig)
 
-  // Si se enciende un canal, apagar los otros dos
-  if (newState) {
+  // ═══════════════════════════════════════════
+  // 🔧 LÓGICA — INICIALIZACIÓN MQTT
+  // ═══════════════════════════════════════════
+  useEffect(() => {
+    MqttModule.initMqtt()
+    if (MqttModule.client.connected) setMqttStatus('Conectado ✅')
+
+    const handler = (topic, message) => {
+      const msg = message.toString().trim().toUpperCase()
+      const encendido = msg === 'ON' || msg === '1' || msg === 'TRUE'
+      if (topic === 'led1/estado') setLedOn(encendido)
+      else if (topic === 'led2/estado') setLedOn2(encendido)
+      else if (topic === 'led3/estado') setLedOn3(encendido)
+    }
+
+    const onConnect = () => setMqttStatus('Conectado ✅')
+    const onError = () => setMqttStatus('Error ❌')
+    const onOffline = () => setMqttStatus('Desconectado ⚠️')
+
+    const activeClient = MqttModule.client
+    activeClient.on('message', handler)
+    activeClient.on('connect', onConnect)
+    activeClient.on('error', onError)
+    activeClient.on('offline', onOffline)
+
+    return () => {
+      activeClient.off('message', handler)
+      activeClient.off('connect', onConnect)
+      activeClient.off('error', onError)
+      activeClient.off('offline', onOffline)
+    }
+  }, [mqttConfig])
+
+  // ═══════════════════════════════════════════
+  // 🔧 LÓGICA — CONFIGURACIÓN DE BOMBILLOS
+  // ═══════════════════════════════════════════
+  const BOMBILLOS = [
+    { id: 1, label: 'Bombillo 1 — Sala', color: '#ef4444', colorName: 'Rojo', r: 239, g: 68, b: 68, pin: 'D4 (R)', on: ledOn, onCount: ledOnCount, offCount: ledOffCount },
+    { id: 2, label: 'Bombillo 2 — Cocina', color: '#22c55e', colorName: 'Verde', r: 34, g: 197, b: 94, pin: 'D5 (G)', on: ledOn2, onCount: ledOnCount2, offCount: ledOffCount2 },
+    { id: 3, label: 'Bombillo 3 — Patio', color: '#2563eb', colorName: 'Azul', r: 37, g: 99, b: 235, pin: 'D3 (B)', on: ledOn3, onCount: ledOnCount3, offCount: ledOffCount3 },
+  ]
+
+  const rgbActivo = ledOn || ledOn2 || ledOn3
+  const rgbMix = BOMBILLOS.reduce(
+    (acc, b) => (b.on ? { r: acc.r + b.r, g: acc.g + b.g, b: acc.b + b.b } : acc),
+    { r: 0, g: 0, b: 0 }
+  )
+  const rgbColor = rgbActivo
+    ? `rgb(${Math.min(rgbMix.r, 255)}, ${Math.min(rgbMix.g, 255)}, ${Math.min(rgbMix.b, 255)})`
+    : '#334155'
+
+  // ═══════════════════════════════════════════
+  // 🔧 LÓGICA — CONTROL DE BOMBILLOS
+  // ═══════════════════════════════════════════
+  const handleToggle = (id) => {
+    if (!MqttModule.client?.connected) {
+      setMqttStatus('Desconectado ⚠️')
+      alert('MQTT no está conectado. Ve a Conexión, guarda la configuración y espera a que salga Conectado.')
+      return
+    }
+
+    let topic = '', newState = false
+
     if (id === 1) {
-      MqttModule.client.publish('led2/control', 'OFF', { qos: 0, retain: true })
-      MqttModule.client.publish('led3/control', 'OFF', { qos: 0, retain: true })
+      newState = !ledOn
+      topic = 'led1/control'
+      setLedOn(newState)
+      setLedOn2(false)
+      setLedOn3(false)
+      if (newState) setLedOnCount(c => c + 1); else setLedOffCount(c => c + 1)
     } else if (id === 2) {
-      MqttModule.client.publish('led1/control', 'OFF', { qos: 0, retain: true })
-      MqttModule.client.publish('led3/control', 'OFF', { qos: 0, retain: true })
+      newState = !ledOn2
+      topic = 'led2/control'
+      setLedOn2(newState)
+      setLedOn(false)
+      setLedOn3(false)
+      if (newState) setLedOnCount2(c => c + 1); else setLedOffCount2(c => c + 1)
     } else if (id === 3) {
-      MqttModule.client.publish('led1/control', 'OFF', { qos: 0, retain: true })
-      MqttModule.client.publish('led2/control', 'OFF', { qos: 0, retain: true })
+      newState = !ledOn3
+      topic = 'led3/control'
+      setLedOn3(newState)
+      setLedOn(false)
+      setLedOn2(false)
+      if (newState) setLedOnCount3(c => c + 1); else setLedOffCount3(c => c + 1)
+    }
+
+    // Publicar al canal seleccionado
+    MqttModule.client.publish(topic, newState ? 'ON' : 'OFF', { qos: 0, retain: true }, (err) => {
+      if (err) {
+        setMqttStatus('Error ❌')
+        alert(`No se pudo enviar ${topic}: ${err.message || err}`)
+      }
+    })
+
+    // Si se enciende un canal, apagar los otros dos
+    if (newState) {
+      if (id === 1) {
+        MqttModule.client.publish('led2/control', 'OFF', { qos: 0, retain: true })
+        MqttModule.client.publish('led3/control', 'OFF', { qos: 0, retain: true })
+      } else if (id === 2) {
+        MqttModule.client.publish('led1/control', 'OFF', { qos: 0, retain: true })
+        MqttModule.client.publish('led3/control', 'OFF', { qos: 0, retain: true })
+      } else if (id === 3) {
+        MqttModule.client.publish('led1/control', 'OFF', { qos: 0, retain: true })
+        MqttModule.client.publish('led2/control', 'OFF', { qos: 0, retain: true })
+      }
     }
   }
-}
   // ═══════════════════════════════════════════
-  // 🔧 LÓGICA — CONFIGURACIÓN MQTT Y HTTP
+  // 🔧 LÓGICA — VERIFICACIÓN HTTP
   // ═══════════════════════════════════════════
-
   useEffect(() => {
     fetch('https://www.google.com/favicon.ico', { mode: 'no-cors' })
       .then(() => setHttpStatus('Conectado ✅'))
       .catch(() => setHttpStatus('Sin conexión ❌'))
   }, [])
 
+  // ═══════════════════════════════════════════
+  // 🔧 LÓGICA — GUARDAR CONFIGURACIÓN MQTT
+  // ═══════════════════════════════════════════
   const guardarMqttConfig = () => {
     const newConfig = MqttModule.normalizeMqttConfig(tempMqttConfig)
     setTempMqttConfig(newConfig)
@@ -215,6 +233,9 @@ const handleToggle = (id) => {
     setEditandoMqtt(false)
   }
 
+  // ═══════════════════════════════════════════
+  // 🔧 LÓGICA — GUARDAR CONFIGURACIÓN HTTP
+  // ═══════════════════════════════════════════
   const guardarHttpConfig = () => {
     localStorage.setItem('httpConfig', JSON.stringify(tempHttpConfig))
     setHttpConfig(tempHttpConfig)
@@ -223,7 +244,7 @@ const handleToggle = (id) => {
   }
 
   // ═══════════════════════════════════════════
-  // 🔧 LÓGICA — MIEMBROS
+  // 🔧 LÓGICA — GESTIÓN DE MIEMBROS
   // ═══════════════════════════════════════════
   const [miembros, setMiembros] = useState([])
   const [editandoMiembro, setEditandoMiembro] = useState(null)
@@ -299,7 +320,7 @@ const handleToggle = (id) => {
   }
 
   // ═══════════════════════════════════════════
-  // 🔧 LÓGICA — SOPORTE (FAQ)
+  // 🔧 LÓGICA — PREGUNTAS FRECUENTES (FAQ)
   // ═══════════════════════════════════════════
   const [faqOpen, setFaqOpen] = useState(null)
   const faqs = [
@@ -311,7 +332,7 @@ const handleToggle = (id) => {
   ]
 
   // ═══════════════════════════════════════════
-  // 🔧 LÓGICA — GRÁFICAS
+  // 🔧 LÓGICA — GRÁFICAS (Chart.js)
   // ═══════════════════════════════════════════
   const mainRef = useRef(null)
   const mqttChartRef = useRef(null)
@@ -328,6 +349,9 @@ const handleToggle = (id) => {
   const [scrollY, setScrollY] = useState(0)
   const [carruselIndex, setCarruselIndex] = useState(0)
 
+  // ═══════════════════════════════════════════
+  // 🔧 LÓGICA — SCROLL Y CARRUSEL
+  // ═══════════════════════════════════════════
   useEffect(() => {
     const el = mainRef.current
     if (!el) return
@@ -342,6 +366,9 @@ const handleToggle = (id) => {
     return () => clearInterval(timer)
   }, [])
 
+  // ═══════════════════════════════════════════
+  // 🔧 LÓGICA — INICIALIZACIÓN DE GRÁFICAS
+  // ═══════════════════════════════════════════
   useEffect(() => {
     if (isMobile) return
     if (!mqttChartRef.current || !httpChartRef.current || !ledChartRef.current) return
@@ -402,6 +429,9 @@ const handleToggle = (id) => {
     }
   }, [])
 
+  // ═══════════════════════════════════════════
+  // 🔧 LÓGICA — ACTUALIZACIÓN DE GRÁFICAS LED
+  // ═══════════════════════════════════════════
   useEffect(() => {
     if (ledChartInst.current) {
       ledChartInst.current.data.datasets[0].data = [ledOnCount, Math.max(ledOffCount, ledOnCount === 0 ? 1 : 0)]
@@ -422,7 +452,7 @@ const handleToggle = (id) => {
   }, [ledOnCount3, ledOffCount3])
 
   // ═══════════════════════════════════════════
-  // 🎨 DATOS ESTÁTICOS DE DECORACIÓN
+  // 🎨 DATOS ESTÁTICOS — TEMAS Y COLORES
   // ═══════════════════════════════════════════
   const themes = {
     light: {
@@ -447,16 +477,16 @@ const handleToggle = (id) => {
     }
   }
   const theme = isMobile ? themes.light : (darkMode ? themes.dark : themes.light)
-  const progress = Math.min(scrollY / 3, 100)
-  const progress2 = Math.min(scrollY / 5, 100)
-  const progress3 = Math.min(scrollY / 4, 100)
-  const SIDEBAR_WIDTH = 260
   const colores = ['#38bdf8', '#4ade80', '#a78bfa', '#fb923c', '#f472b6', '#fde047']
   const redesSociales = [
     { label: 'Instagram', icon: '📸' }, { label: 'LinkedIn', icon: '💼' },
     { label: 'GitHub', icon: '🐙' }, { label: 'Twitter/X', icon: '🐦' },
     { label: 'Facebook', icon: '👤' }, { label: 'TikTok', icon: '🎵' },
   ]
+
+  // ═══════════════════════════════════════════
+  // 🎨 DATOS ESTÁTICOS — CARRUSEL Y PROGRESO
+  // ═══════════════════════════════════════════
   const carruselCards = [
     { icon: '💡', title: 'Control inteligente', desc: 'Enciende y apaga dispositivos desde cualquier lugar del mundo en tiempo real.', color: '#fde047', bg: '#1e293b' },
     { icon: '📡', title: 'Conectado siempre', desc: 'Tu ESP32 permanece conectado al broker MQTT para recibir órdenes al instante.', color: '#38bdf8', bg: '#0f2744' },
@@ -464,6 +494,10 @@ const handleToggle = (id) => {
     { icon: '📱', title: 'App móvil nativa', desc: 'Disponible como APK para Android con acceso a cámara, ubicación y más.', color: '#a78bfa', bg: '#1a1040' },
     { icon: '⚡', title: 'Automatización IoT', desc: 'Integra sensores, relés y actuadores para crear un hogar o laboratorio inteligente.', color: '#fb923c', bg: '#2d1200' },
   ]
+  const progress = Math.min(scrollY / 3, 100)
+  const progress2 = Math.min(scrollY / 5, 100)
+  const progress3 = Math.min(scrollY / 4, 100)
+  const SIDEBAR_WIDTH = 260
 
   // ═══════════════════════════════════════════
   // 🎨 RENDER PRINCIPAL
@@ -472,7 +506,7 @@ const handleToggle = (id) => {
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', fontFamily: 'system-ui, sans-serif', background: theme.sidebar, transition: 'all 0.5s ease', position: 'relative' }}>
 
       {/* ═══════════════════════════════════════
-          🎨 DECORACIÓN — ESTRELLITAS MODO OSCURO
+          🎨 CSS — ESTRELLITAS MODO OSCURO
       ═══════════════════════════════════════ */}
       {darkMode && !isMobile && (
         <>
@@ -503,12 +537,15 @@ const handleToggle = (id) => {
         </>
       )}
 
+      {/* ═══════════════════════════════════════
+          🎨 CSS — OVERLAY SIDEBAR MÓVIL
+      ═══════════════════════════════════════ */}
       {isMobile && sidebarOpen && (
         <div onClick={() => setSidebarOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 40, backdropFilter: 'blur(2px)' }} />
       )}
 
       {/* ═══════════════════════════════════════
-          🎨 DECORACIÓN — MODAL EDITAR MIEMBRO
+          🎨 CSS — MODAL EDITAR MIEMBRO
       ═══════════════════════════════════════ */}
       {editandoMiembro && !isMobile && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', overflowY: 'auto' }}>
@@ -559,7 +596,7 @@ const handleToggle = (id) => {
       )}
 
       {/* ═══════════════════════════════════════
-          🎨 DECORACIÓN — MODAL MQTT
+          🎨 CSS — MODAL CONFIGURACIÓN MQTT
       ═══════════════════════════════════════ */}
       {editandoMqtt && !isMobile && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', overflowY: 'auto' }}>
@@ -612,7 +649,7 @@ const handleToggle = (id) => {
       )}
 
       {/* ═══════════════════════════════════════
-          🎨 DECORACIÓN — MODAL HTTP
+          🎨 CSS — MODAL CONFIGURACIÓN HTTP
       ═══════════════════════════════════════ */}
       {editandoHttp && !isMobile && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', overflowY: 'auto' }}>
@@ -649,7 +686,7 @@ const handleToggle = (id) => {
       )}
 
       {/* ═══════════════════════════════════════
-          🎨 DECORACIÓN — MODAL INFO USUARIO (MÓVIL)
+          🎨 CSS — MODAL INFO USUARIO (MÓVIL)
       ═══════════════════════════════════════ */}
       {showUserInfo && isMobile && (
         <div onClick={() => setShowUserInfo(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
@@ -678,7 +715,7 @@ const handleToggle = (id) => {
       )}
 
       {/* ═══════════════════════════════════════
-          🎨 DECORACIÓN — MODAL CONFIRMAR CIERRE DE SESIÓN
+          🎨 CSS — MODAL CONFIRMAR CIERRE DE SESIÓN
       ═══════════════════════════════════════ */}
       {showLogoutConfirm && (
         <div onClick={() => setShowLogoutConfirm(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
@@ -703,7 +740,7 @@ const handleToggle = (id) => {
       )}
 
       {/* ═══════════════════════════════════════
-          🎨 DECORACIÓN — SIDEBAR
+          🎨 CSS — SIDEBAR DE NAVEGACIÓN
       ═══════════════════════════════════════ */}
       <div style={{ position: isMobile ? 'fixed' : 'relative', left: 0, top: 0, height: '100vh', width: `${SIDEBAR_WIDTH}px`, flexShrink: 0, background: theme.sidebar, borderRight: '1px solid #1e293b', transform: isMobile ? (sidebarOpen ? 'translateX(0)' : 'translateX(-100%)') : 'translateX(0)', transition: 'transform 0.3s ease, background 0.5s ease', zIndex: 50, display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '20px', borderBottom: '1px solid #1e293b', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -780,7 +817,7 @@ const handleToggle = (id) => {
       </div>
 
       {/* ═══════════════════════════════════════
-          🎨 DECORACIÓN — MAIN
+          🎨 CSS — CONTENEDOR PRINCIPAL
       ═══════════════════════════════════════ */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
 
@@ -821,7 +858,7 @@ const handleToggle = (id) => {
         <div ref={mainRef} style={{ flex: 1, overflowY: 'auto', background: theme.bg, transition: 'background 0.5s ease' }}>
 
           {/* ═══════════════════════════════════════
-              🎨 DECORACIÓN — SECCIÓN DASHBOARD
+              🎨 CSS — SECCIÓN DASHBOARD
           ═══════════════════════════════════════ */}
           {activeSection === 'dashboard' && (
             <div>
@@ -941,7 +978,7 @@ const handleToggle = (id) => {
           )}
 
           {/* ═══════════════════════════════════════
-              🎨 DECORACIÓN — SECCIÓN BOMBILLOS
+              🎨 CSS — SECCIÓN BOMBILLOS
           ═══════════════════════════════════════ */}
           {activeSection === 'bombillos' && (
             <div style={{ padding: '40px 20px', maxWidth: '600px', margin: '0 auto' }}>
@@ -1031,7 +1068,7 @@ const handleToggle = (id) => {
           )}
 
           {/* ═══════════════════════════════════════
-              🎨 DECORACIÓN — SECCIÓN CONEXIÓN MQTT
+              🎨 CSS — SECCIÓN CONEXIÓN MQTT
           ═══════════════════════════════════════ */}
           {activeSection === 'mqtt' && (
             <div style={{ padding: '24px', maxWidth: '700px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -1137,7 +1174,7 @@ const handleToggle = (id) => {
           )}
 
           {/* ═══════════════════════════════════════
-              🎨 DECORACIÓN — SECCIÓN QUIÉNES SOMOS
+              🎨 CSS — SECCIÓN QUIÉNES SOMOS
           ═══════════════════════════════════════ */}
           {activeSection === 'quienes' && (
             <div style={{ padding: '40px 20px', maxWidth: '700px', margin: '0 auto' }}>
@@ -1208,7 +1245,7 @@ const handleToggle = (id) => {
           )}
 
           {/* ═══════════════════════════════════════
-              🎨 DECORACIÓN — SECCIÓN SOPORTE
+              🎨 CSS — SECCIÓN SOPORTE
           ═══════════════════════════════════════ */}
           {activeSection === 'soporte' && (
             <div style={{ padding: '40px 20px', maxWidth: '650px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -1263,7 +1300,7 @@ const handleToggle = (id) => {
           )}
 
           {/* ═══════════════════════════════════════
-              🎨 DECORACIÓN — SECCIÓN CONFIGURACIÓN
+              🎨 CSS — SECCIÓN CONFIGURACIÓN
           ═══════════════════════════════════════ */}
           {activeSection === 'config' && !isMobile && (
             <div style={{ padding: '40px 20px', maxWidth: '600px', margin: '0 auto' }}>
