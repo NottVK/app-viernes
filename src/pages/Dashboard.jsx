@@ -860,24 +860,28 @@ const handleToggle = (id) => {
                       <div style={{ color: '#64748b', marginTop: '8px', fontSize: '14px' }}>MQTT · HTTP · LED</div>
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0,1fr))', gap: '24px', maxWidth: '900px', margin: '0 auto' }}>
-                      <div style={{ background: '#1e293b', borderRadius: '16px', padding: '24px', border: '1px solid #334155' }}>
-                        <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px' }}>Protocolo MQTT</div>
-                        <div style={{ fontSize: '18px', fontWeight: '600', color: '#f1f5f9', marginBottom: '14px' }}>Mensajes / min</div>
-                        <div style={{ display: 'flex', gap: '16px', marginBottom: '12px', fontSize: '12px', color: '#94a3b8' }}>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#38bdf8' }} />Publicados</span>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#818cf8' }} />Recibidos</span>
-                        </div>
-                        <div style={{ position: 'relative', height: '180px' }}>{!isMobile && <canvas ref={mqttChartRef} />}</div>
-                      </div>
-                      <div style={{ background: '#1e293b', borderRadius: '16px', padding: '24px', border: '1px solid #334155' }}>
-                        <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px' }}>Protocolo HTTP</div>
-                        <div style={{ fontSize: '18px', fontWeight: '600', color: '#f1f5f9', marginBottom: '14px' }}>Solicitudes / min</div>
-                        <div style={{ display: 'flex', gap: '16px', marginBottom: '12px', fontSize: '12px', color: '#94a3b8' }}>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#4ade80' }} />Supabase REST</span>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#fde047' }} />Auth requests</span>
-                        </div>
-                        <div style={{ position: 'relative', height: '180px' }}>{!isMobile && <canvas ref={httpChartRef} />}</div>
-                      </div>
+                      {!isMobile && (
+                        <>
+                          <div style={{ background: '#1e293b', borderRadius: '16px', padding: '24px', border: '1px solid #334155' }}>
+                            <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px' }}>Protocolo MQTT</div>
+                            <div style={{ fontSize: '18px', fontWeight: '600', color: '#f1f5f9', marginBottom: '14px' }}>Mensajes / min</div>
+                            <div style={{ display: 'flex', gap: '16px', marginBottom: '12px', fontSize: '12px', color: '#94a3b8' }}>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#38bdf8' }} />Publicados</span>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#818cf8' }} />Recibidos</span>
+                            </div>
+                            <div style={{ position: 'relative', height: '180px' }}><canvas ref={mqttChartRef} /></div>
+                          </div>
+                          <div style={{ background: '#1e293b', borderRadius: '16px', padding: '24px', border: '1px solid #334155' }}>
+                            <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px' }}>Protocolo HTTP</div>
+                            <div style={{ fontSize: '18px', fontWeight: '600', color: '#f1f5f9', marginBottom: '14px' }}>Solicitudes / min</div>
+                            <div style={{ display: 'flex', gap: '16px', marginBottom: '12px', fontSize: '12px', color: '#94a3b8' }}>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#4ade80' }} />Supabase REST</span>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#fde047' }} />Auth requests</span>
+                            </div>
+                            <div style={{ position: 'relative', height: '180px' }}><canvas ref={httpChartRef} /></div>
+                          </div>
+                        </>
+                      )}
                       <div style={{ background: '#1e293b', borderRadius: '16px', padding: '20px', border: '1px solid #334155' }}>
                         <div style={{ background: carruselCards[carruselIndex].bg, borderRadius: '14px', padding: '28px 20px', border: `1px solid ${carruselCards[carruselIndex].color}33`, textAlign: 'center', minHeight: '165px', transition: 'all 0.4s ease', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                           <div style={{ fontSize: '42px', marginBottom: '12px' }}>{carruselCards[carruselIndex].icon}</div>
