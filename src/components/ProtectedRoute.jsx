@@ -11,7 +11,21 @@ export default function ProtectedRoute({ children }) {
     })
   }, [])
 
-  if (session === undefined) return <p>Cargando...</p>
+  if (session === undefined) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#0f172a',
+        color: '#94a3b8',
+        fontFamily: 'system-ui, sans-serif',
+      }}>
+        Cargando...
+      </div>
+    )
+  }
   if (!session) return <Navigate to="/login" />
   return children
 }

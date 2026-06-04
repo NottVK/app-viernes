@@ -51,7 +51,7 @@ export function useRegister() {
           enviando.current = false
           return
         }
-        navigate('/dashboard')
+        navigate('/dashboard', { state: { fromAuth: true } })
       } else {
         setError('Revisa tu correo para confirmar tu cuenta antes de continuar.')
       }

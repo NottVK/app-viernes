@@ -5,9 +5,11 @@ import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../supabase'
 import { useNavigate } from 'react-router-dom'
 import * as MqttModule from '../mqtt'
+import { isApkRuntime } from '../runtime'
 
 const secureWsOnly = MqttModule.requiresSecureWebSocket()
 const browserOnly = MqttModule.isBrowserRuntime()
+const isApk = isApkRuntime()
 
 export default function Dashboard() {
   const navigate = useNavigate()
@@ -52,8 +54,8 @@ export default function Dashboard() {
   // 🔧 LÓGICA — SIDEBAR Y NAVEGACIÓN
   // ═══════════════════════════════════════════
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [activeSection, setActiveSection] = useState('dashboard')
-  const navItems = [
+  const [activeSection, setActiveSection] = useState(isApk ? 'bombillos' : 'dashboard')
+  const allNavItems = [
     { id: 'dashboard', icon: '⊞', label: 'Dashboard' },
     { id: 'bombillos', icon: '💡', label: 'Bombillos' },
     { id: 'mqtt', icon: '◈', label: 'Conexión' },
@@ -61,6 +63,7 @@ export default function Dashboard() {
     { id: 'soporte', icon: '🛠', label: 'Soporte' },
     { id: 'config', icon: '⚙', label: 'Configuración' },
   ]
+  const navItems = isApk ? allNavItems.filter((item) => item.id !== 'config') : allNavItems
 
   // ═══════════════════════════════════════════
   // 🔧 LÓGICA — BOMBILLOS Y MQTT
@@ -331,11 +334,13 @@ const handleToggle = (id) => {
   }, [])
 
   useEffect(() => {
+    if (isApk) return
     const timer = setInterval(() => setCarruselIndex(i => (i + 1) % carruselCards.length), 4000)
     return () => clearInterval(timer)
   }, [])
 
   useEffect(() => {
+    if (isApk) return
     if (!mqttChartRef.current || !httpChartRef.current || !ledChartRef.current) return
     import('chart.js').then(({ Chart, registerables }) => {
       Chart.register(...registerables)
@@ -457,7 +462,7 @@ const handleToggle = (id) => {
       {/* ═══════════════════════════════════════
           🎨 DECORACIÓN — MODAL EDITAR MIEMBRO
       ═══════════════════════════════════════ */}
-      {editandoMiembro && (
+      {editandoMiembro && !isApk && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', overflowY: 'auto' }}>
           <div style={{ background: 'white', borderRadius: '20px', padding: '32px', width: '100%', maxWidth: '440px', margin: 'auto' }}>
             <div style={{ fontSize: '18px', fontWeight: '600', color: '#0f172a', marginBottom: '24px' }}>✏️ Editar mi perfil</div>
@@ -508,7 +513,7 @@ const handleToggle = (id) => {
       {/* ═══════════════════════════════════════
           🎨 DECORACIÓN — MODAL MQTT
       ═══════════════════════════════════════ */}
-      {editandoMqtt && (
+      {editandoMqtt && !isApk && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', overflowY: 'auto' }}>
           <div style={{ background: theme.card, borderRadius: '20px', padding: '32px', width: '100%', maxWidth: '440px', margin: 'auto', border: `1px solid ${theme.border}` }}>
             <div style={{ fontSize: '18px', fontWeight: '600', color: theme.text, marginBottom: '24px' }}>⚙️ Configurar MQTT</div>
@@ -561,7 +566,7 @@ const handleToggle = (id) => {
       {/* ═══════════════════════════════════════
           🎨 DECORACIÓN — MODAL HTTP
       ═══════════════════════════════════════ */}
-      {editandoHttp && (
+      {editandoHttp && !isApk && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', overflowY: 'auto' }}>
           <div style={{ background: theme.card, borderRadius: '20px', padding: '32px', width: '100%', maxWidth: '440px', margin: 'auto', border: `1px solid ${theme.border}` }}>
             <div style={{ fontSize: '18px', fontWeight: '600', color: theme.text, marginBottom: '24px' }}>⚙️ Configurar HTTP</div>
@@ -632,7 +637,9 @@ const handleToggle = (id) => {
               {activeSection === item.id && <div style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', background: '#38bdf8' }} />}
             </div>
           ))}
-          <div style={{ fontSize: '10px', fontWeight: '600', color: '#475569', letterSpacing: '1px', padding: '12px 20px 4px', textTransform: 'uppercase' }}>Configuración</div>
+          {!isApk && (
+            <div style={{ fontSize: '10px', fontWeight: '600', color: '#475569', letterSpacing: '1px', padding: '12px 20px 4px', textTransform: 'uppercase' }}>Configuración</div>
+          )}
           {navItems.slice(5).map(item => (
             <div key={item.id} onClick={() => { setActiveSection(item.id); if (isMobile) setSidebarOpen(false) }} style={{ padding: '10px 20px', margin: '2px 8px', display: 'flex', alignItems: 'center', gap: '10px', background: activeSection === item.id ? 'linear-gradient(90deg, #0ea5e920, #6366f110)' : 'transparent', borderRadius: '10px', borderLeft: activeSection === item.id ? '3px solid #38bdf8' : '3px solid transparent', cursor: 'pointer', fontSize: '14px', color: activeSection === item.id ? '#f1f5f9' : '#64748b', transition: 'all 0.2s' }}>
               <span style={{ fontSize: '16px', width: '20px', textAlign: 'center' }}>{item.icon}</span>
@@ -705,83 +712,104 @@ const handleToggle = (id) => {
                   <div style={{ marginTop: '40px', fontSize: '24px', animation: 'bounce 2s infinite', opacity: Math.max(0, 1 - scrollY / 100) }}>↓</div>
                 </div>
               </div>
-              <div style={{ background: '#0f172a', padding: '60px 20px', borderTop: '1px solid #1e293b' }}>
-                <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-                  <div style={{ fontSize: 'clamp(20px, 3vw, 28px)', fontWeight: '600', color: '#f1f5f9' }}>Tráfico de red en tiempo real</div>
-                  <div style={{ color: '#64748b', marginTop: '8px', fontSize: '14px' }}>MQTT · HTTP · LED</div>
+              {isApk ? (
+                <div style={{ background: '#0f172a', padding: '48px 20px 60px', borderTop: '1px solid #1e293b' }}>
+                  <div style={{ maxWidth: '420px', margin: '0 auto', textAlign: 'center', background: '#1e293b', borderRadius: '20px', padding: '32px 24px', border: '1px solid #334155' }}>
+                    <div style={{ fontSize: '40px', marginBottom: '12px' }}>💡</div>
+                    <div style={{ fontSize: '20px', fontWeight: '600', color: '#f1f5f9', marginBottom: '8px' }}>Control de bombillos</div>
+                    <div style={{ fontSize: '14px', color: '#94a3b8', lineHeight: 1.6, marginBottom: '24px' }}>
+                      En la app móvil puedes encender y apagar los LEDs. Las gráficas y la configuración del broker están disponibles en la versión de escritorio.
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveSection('bombillos')}
+                      style={{ padding: '12px 28px', background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', color: 'white', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: '600', cursor: 'pointer' }}
+                    >
+                      Ir a bombillos
+                    </button>
+                  </div>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0,1fr))', gap: '24px', maxWidth: '900px', margin: '0 auto' }}>
-                  <div style={{ background: '#1e293b', borderRadius: '16px', padding: '24px', border: '1px solid #334155' }}>
-                    <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px' }}>Protocolo MQTT</div>
-                    <div style={{ fontSize: '18px', fontWeight: '600', color: '#f1f5f9', marginBottom: '14px' }}>Mensajes / min</div>
-                    <div style={{ display: 'flex', gap: '16px', marginBottom: '12px', fontSize: '12px', color: '#94a3b8' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#38bdf8' }} />Publicados</span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#818cf8' }} />Recibidos</span>
+              ) : (
+                <>
+                  <div style={{ background: '#0f172a', padding: '60px 20px', borderTop: '1px solid #1e293b' }}>
+                    <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+                      <div style={{ fontSize: 'clamp(20px, 3vw, 28px)', fontWeight: '600', color: '#f1f5f9' }}>Tráfico de red en tiempo real</div>
+                      <div style={{ color: '#64748b', marginTop: '8px', fontSize: '14px' }}>MQTT · HTTP · LED</div>
                     </div>
-                    <div style={{ position: 'relative', height: '180px' }}><canvas ref={mqttChartRef} /></div>
-                  </div>
-                  <div style={{ background: '#1e293b', borderRadius: '16px', padding: '24px', border: '1px solid #334155' }}>
-                    <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px' }}>Protocolo HTTP</div>
-                    <div style={{ fontSize: '18px', fontWeight: '600', color: '#f1f5f9', marginBottom: '14px' }}>Solicitudes / min</div>
-                    <div style={{ display: 'flex', gap: '16px', marginBottom: '12px', fontSize: '12px', color: '#94a3b8' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#4ade80' }} />Supabase REST</span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#fde047' }} />Auth requests</span>
-                    </div>
-                    <div style={{ position: 'relative', height: '180px' }}><canvas ref={httpChartRef} /></div>
-                  </div>
-                  <div style={{ background: '#1e293b', borderRadius: '16px', padding: '20px', border: '1px solid #334155' }}>
-                    <div style={{ background: carruselCards[carruselIndex].bg, borderRadius: '14px', padding: '28px 20px', border: `1px solid ${carruselCards[carruselIndex].color}33`, textAlign: 'center', minHeight: '165px', transition: 'all 0.4s ease', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                      <div style={{ fontSize: '42px', marginBottom: '12px' }}>{carruselCards[carruselIndex].icon}</div>
-                      <div style={{ fontSize: '16px', fontWeight: '600', color: carruselCards[carruselIndex].color, marginBottom: '8px' }}>{carruselCards[carruselIndex].title}</div>
-                      <div style={{ fontSize: '13px', color: '#94a3b8', lineHeight: '1.6' }}>{carruselCards[carruselIndex].desc}</div>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '14px', marginTop: '14px' }}>
-                      <button onClick={() => setCarruselIndex(i => (i - 1 + carruselCards.length) % carruselCards.length)} style={{ background: '#0f172a', border: '1px solid #334155', color: '#94a3b8', width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
-                      <div style={{ display: 'flex', gap: '6px' }}>{carruselCards.map((_, i) => <div key={i} onClick={() => setCarruselIndex(i)} style={{ width: i === carruselIndex ? '18px' : '7px', height: '7px', borderRadius: '4px', cursor: 'pointer', background: i === carruselIndex ? carruselCards[carruselIndex].color : '#334155', transition: 'all 0.3s ease' }} />)}</div>
-                      <button onClick={() => setCarruselIndex(i => (i + 1) % carruselCards.length)} style={{ background: '#0f172a', border: '1px solid #334155', color: '#94a3b8', width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>›</button>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {[
-                      { label: 'LED 1 (Sala)', ref: ledChartRef, onCount: ledOnCount, offCount: ledOffCount },
-                      { label: 'LED 2 (Cocina)', ref: ledChartRef2, onCount: ledOnCount2, offCount: ledOffCount2 },
-                      { label: 'LED 3 (Patio)', ref: ledChartRef3, onCount: ledOnCount3, offCount: ledOffCount3 },
-                    ].map(led => (
-                      <div key={led.label} style={{ background: '#1e293b', borderRadius: '12px', padding: '16px', border: '1px solid #334155', display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <div style={{ position: 'relative', width: '60px', height: '60px', flexShrink: 0 }}>
-                          <canvas ref={led.ref} />
-                          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-                            <span style={{ fontSize: '14px', fontWeight: '700', color: '#fde047' }}>{led.onCount}</span>
-                          </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0,1fr))', gap: '24px', maxWidth: '900px', margin: '0 auto' }}>
+                      <div style={{ background: '#1e293b', borderRadius: '16px', padding: '24px', border: '1px solid #334155' }}>
+                        <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px' }}>Protocolo MQTT</div>
+                        <div style={{ fontSize: '18px', fontWeight: '600', color: '#f1f5f9', marginBottom: '14px' }}>Mensajes / min</div>
+                        <div style={{ display: 'flex', gap: '16px', marginBottom: '12px', fontSize: '12px', color: '#94a3b8' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#38bdf8' }} />Publicados</span>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#818cf8' }} />Recibidos</span>
                         </div>
-                        <div>
-                          <div style={{ fontSize: '13px', color: '#f1f5f9', fontWeight: '500' }}>{led.label}</div>
-                          <div style={{ fontSize: '11px', color: '#64748b' }}>Apagados: {led.offCount}</div>
+                        <div style={{ position: 'relative', height: '180px' }}><canvas ref={mqttChartRef} /></div>
+                      </div>
+                      <div style={{ background: '#1e293b', borderRadius: '16px', padding: '24px', border: '1px solid #334155' }}>
+                        <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px' }}>Protocolo HTTP</div>
+                        <div style={{ fontSize: '18px', fontWeight: '600', color: '#f1f5f9', marginBottom: '14px' }}>Solicitudes / min</div>
+                        <div style={{ display: 'flex', gap: '16px', marginBottom: '12px', fontSize: '12px', color: '#94a3b8' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#4ade80' }} />Supabase REST</span>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#fde047' }} />Auth requests</span>
+                        </div>
+                        <div style={{ position: 'relative', height: '180px' }}><canvas ref={httpChartRef} /></div>
+                      </div>
+                      <div style={{ background: '#1e293b', borderRadius: '16px', padding: '20px', border: '1px solid #334155' }}>
+                        <div style={{ background: carruselCards[carruselIndex].bg, borderRadius: '14px', padding: '28px 20px', border: `1px solid ${carruselCards[carruselIndex].color}33`, textAlign: 'center', minHeight: '165px', transition: 'all 0.4s ease', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                          <div style={{ fontSize: '42px', marginBottom: '12px' }}>{carruselCards[carruselIndex].icon}</div>
+                          <div style={{ fontSize: '16px', fontWeight: '600', color: carruselCards[carruselIndex].color, marginBottom: '8px' }}>{carruselCards[carruselIndex].title}</div>
+                          <div style={{ fontSize: '13px', color: '#94a3b8', lineHeight: '1.6' }}>{carruselCards[carruselIndex].desc}</div>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '14px', marginTop: '14px' }}>
+                          <button onClick={() => setCarruselIndex(i => (i - 1 + carruselCards.length) % carruselCards.length)} style={{ background: '#0f172a', border: '1px solid #334155', color: '#94a3b8', width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
+                          <div style={{ display: 'flex', gap: '6px' }}>{carruselCards.map((_, i) => <div key={i} onClick={() => setCarruselIndex(i)} style={{ width: i === carruselIndex ? '18px' : '7px', height: '7px', borderRadius: '4px', cursor: 'pointer', background: i === carruselIndex ? carruselCards[carruselIndex].color : '#334155', transition: 'all 0.3s ease' }} />)}</div>
+                          <button onClick={() => setCarruselIndex(i => (i + 1) % carruselCards.length)} style={{ background: '#0f172a', border: '1px solid #334155', color: '#94a3b8', width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>›</button>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div style={{ background: '#0f172a', padding: '60px 20px', borderTop: '1px solid #1e293b' }}>
-                <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center', marginBottom: '40px' }}>
-                  <div style={{ fontSize: 'clamp(20px, 3vw, 32px)', fontWeight: '600', color: '#f1f5f9' }}>Estado del sistema</div>
-                  <div style={{ color: '#94a3b8', marginTop: '8px', fontSize: '14px' }}>Métricas en tiempo real</div>
-                </div>
-                <div style={{ maxWidth: '900px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '24px' }}>
-                  {[
-                    { label: 'Dispositivos activos', value: Math.round(progress2), color: '#38bdf8' },
-                    { label: 'Uptime del sistema', value: Math.round(progress), color: '#4ade80' },
-                    { label: 'Señal MQTT', value: Math.round(progress3), color: '#a78bfa' },
-                  ].map(stat => (
-                    <div key={stat.label} style={{ background: '#1e293b', borderRadius: '16px', padding: '28px', border: '1px solid #334155', transform: scrollY > 800 ? 'translateY(0)' : 'translateY(40px)', opacity: scrollY > 800 ? 1 : 0, transition: 'all 0.6s ease' }}>
-                      <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '16px' }}>{stat.label}</div>
-                      <div style={{ fontSize: '40px', fontWeight: '700', color: stat.color, marginBottom: '16px' }}>{stat.value}%</div>
-                      <div style={{ height: '6px', background: '#334155', borderRadius: '3px' }}><div style={{ height: '100%', borderRadius: '3px', background: stat.color, width: `${stat.value}%`, transition: 'width 0.3s ease' }} /></div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {[
+                          { label: 'LED 1 (Sala)', ref: ledChartRef, onCount: ledOnCount, offCount: ledOffCount },
+                          { label: 'LED 2 (Cocina)', ref: ledChartRef2, onCount: ledOnCount2, offCount: ledOffCount2 },
+                          { label: 'LED 3 (Patio)', ref: ledChartRef3, onCount: ledOnCount3, offCount: ledOffCount3 },
+                        ].map(led => (
+                          <div key={led.label} style={{ background: '#1e293b', borderRadius: '12px', padding: '16px', border: '1px solid #334155', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                            <div style={{ position: 'relative', width: '60px', height: '60px', flexShrink: 0 }}>
+                              <canvas ref={led.ref} />
+                              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+                                <span style={{ fontSize: '14px', fontWeight: '700', color: '#fde047' }}>{led.onCount}</span>
+                              </div>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: '13px', color: '#f1f5f9', fontWeight: '500' }}>{led.label}</div>
+                              <div style={{ fontSize: '11px', color: '#64748b' }}>Apagados: {led.offCount}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  ))}
-                </div>
-              </div>
+                  </div>
+                  <div style={{ background: '#0f172a', padding: '60px 20px', borderTop: '1px solid #1e293b' }}>
+                    <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center', marginBottom: '40px' }}>
+                      <div style={{ fontSize: 'clamp(20px, 3vw, 32px)', fontWeight: '600', color: '#f1f5f9' }}>Estado del sistema</div>
+                      <div style={{ color: '#94a3b8', marginTop: '8px', fontSize: '14px' }}>Métricas en tiempo real</div>
+                    </div>
+                    <div style={{ maxWidth: '900px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '24px' }}>
+                      {[
+                        { label: 'Dispositivos activos', value: Math.round(progress2), color: '#38bdf8' },
+                        { label: 'Uptime del sistema', value: Math.round(progress), color: '#4ade80' },
+                        { label: 'Señal MQTT', value: Math.round(progress3), color: '#a78bfa' },
+                      ].map(stat => (
+                        <div key={stat.label} style={{ background: '#1e293b', borderRadius: '16px', padding: '28px', border: '1px solid #334155', transform: scrollY > 800 ? 'translateY(0)' : 'translateY(40px)', opacity: scrollY > 800 ? 1 : 0, transition: 'all 0.6s ease' }}>
+                          <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '16px' }}>{stat.label}</div>
+                          <div style={{ fontSize: '40px', fontWeight: '700', color: stat.color, marginBottom: '16px' }}>{stat.value}%</div>
+                          <div style={{ height: '6px', background: '#334155', borderRadius: '3px' }}><div style={{ height: '100%', borderRadius: '3px', background: stat.color, width: `${stat.value}%`, transition: 'width 0.3s ease' }} /></div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
 
@@ -893,6 +921,25 @@ const handleToggle = (id) => {
                   </div>
                 </div>
               </div>
+              {isApk && (
+                <div style={{ background: theme.card, borderRadius: '16px', padding: '24px', border: `1px solid ${theme.border}` }}>
+                  <div style={{ fontSize: '16px', fontWeight: '600', color: theme.text, marginBottom: '16px' }}>Estado de conexión</div>
+                  {[
+                    { label: 'MQTT', value: mqttStatus },
+                    { label: 'Internet / HTTP', value: httpStatus },
+                  ].map(item => (
+                    <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: `1px solid ${theme.border}` }}>
+                      <span style={{ fontSize: '13px', color: theme.textMuted }}>{item.label}</span>
+                      <span style={{ fontSize: '14px', fontWeight: '500', color: item.value.includes('✅') ? '#22c55e' : '#f59e0b' }}>{item.value}</span>
+                    </div>
+                  ))}
+                  <p style={{ fontSize: '12px', color: theme.textMuted, marginTop: '16px', lineHeight: 1.5 }}>
+                    La configuración del broker y de HTTP solo puede modificarse desde la versión de escritorio.
+                  </p>
+                </div>
+              )}
+              {!isApk && (
+              <>
               <div style={{ background: theme.card, borderRadius: '16px', padding: '24px', border: `1px solid ${theme.border}` }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -955,6 +1002,8 @@ const handleToggle = (id) => {
                   </div>
                 ))}
               </div>
+              </>
+              )}
             </div>
           )}
 
@@ -972,10 +1021,12 @@ const handleToggle = (id) => {
                     </div>
                   )}
                   <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, #0f172a 100%)' }} />
-                  <label style={{ position: 'absolute', bottom: '12px', right: '12px', background: 'rgba(14,165,233,0.9)', color: 'white', fontSize: '12px', padding: '6px 12px', borderRadius: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', zIndex: 2 }}>
-                    📷 {grupoFotoUrl ? 'Cambiar foto' : 'Subir foto'}
-                    <input type="file" accept="image/*" onChange={subirFotoGrupo} style={{ display: 'none' }} />
-                  </label>
+                  {!isApk && (
+                    <label style={{ position: 'absolute', bottom: '12px', right: '12px', background: 'rgba(14,165,233,0.9)', color: 'white', fontSize: '12px', padding: '6px 12px', borderRadius: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', zIndex: 2 }}>
+                      📷 {grupoFotoUrl ? 'Cambiar foto' : 'Subir foto'}
+                      <input type="file" accept="image/*" onChange={subirFotoGrupo} style={{ display: 'none' }} />
+                    </label>
+                  )}
                 </div>
                 <div style={{ padding: '24px 32px 32px', textAlign: 'center' }}>
                   <div style={{ fontSize: '24px', fontWeight: '700', color: '#f1f5f9', marginBottom: '6px' }}>Grupo ADSO — SENA</div>
@@ -991,7 +1042,9 @@ const handleToggle = (id) => {
                 </div>
               </div>
               <div style={{ fontSize: '18px', fontWeight: '600', color: theme.text, marginBottom: '8px', textAlign: 'center' }}>Nuestro equipo</div>
-              <div style={{ fontSize: '13px', color: theme.textMuted, textAlign: 'center', marginBottom: '24px' }}>Toca cualquier miembro para editar tu perfil</div>
+              <div style={{ fontSize: '13px', color: theme.textMuted, textAlign: 'center', marginBottom: '24px' }}>
+                {isApk ? 'Información del equipo (solo lectura)' : 'Toca cualquier miembro para editar tu perfil'}
+              </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {miembros.map((m, i) => (
                   <div key={m.id} style={{ background: theme.card, borderRadius: '20px', border: `1px solid ${theme.border}`, overflow: 'hidden' }}>
@@ -1003,7 +1056,9 @@ const handleToggle = (id) => {
                         <div style={{ fontSize: '16px', fontWeight: '600', color: theme.text }}>{m.nombre}</div>
                         <div style={{ fontSize: '13px', color: colores[i % colores.length], fontWeight: '500' }}>{m.rol}</div>
                       </div>
-                      <button onClick={() => abrirEdicion(m)} style={{ background: '#f8fafc', border: `1px solid ${theme.border}`, borderRadius: '8px', padding: '8px 14px', fontSize: '13px', cursor: 'pointer', color: theme.textMuted }}>✏️ Editar</button>
+                      {!isApk && (
+                        <button onClick={() => abrirEdicion(m)} style={{ background: '#f8fafc', border: `1px solid ${theme.border}`, borderRadius: '8px', padding: '8px 14px', fontSize: '13px', cursor: 'pointer', color: theme.textMuted }}>✏️ Editar</button>
+                      )}
                     </div>
                     {(m.descripcion || m.correo || m.red_social_url) && (
                       <div style={{ padding: '16px 24px 20px', borderTop: `1px solid ${theme.border}` }}>
@@ -1081,7 +1136,7 @@ const handleToggle = (id) => {
           {/* ═══════════════════════════════════════
               🎨 DECORACIÓN — SECCIÓN CONFIGURACIÓN
           ═══════════════════════════════════════ */}
-          {activeSection === 'config' && (
+          {activeSection === 'config' && !isApk && (
             <div style={{ padding: '40px 20px', maxWidth: '600px', margin: '0 auto' }}>
               <div style={{ background: theme.card, borderRadius: '16px', padding: '32px', border: `1px solid ${theme.border}` }}>
                 <div style={{ fontSize: '18px', fontWeight: '500', color: theme.text, marginBottom: '24px' }}>Configuración de perfil</div>

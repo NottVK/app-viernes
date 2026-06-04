@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useLogin } from '../logic/Login.logic'
+import AuthSceneryLayout from '../components/scenery/AuthSceneryLayout'
 
 export default function Login() {
   const {
@@ -11,50 +12,80 @@ export default function Login() {
 
   if (showForgot) {
     return (
-      <div className="min-h-screen bg-pink-50 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-2xl shadow-md w-full max-w-md">
-          <h1 className="text-3xl font-bold text-pink-500 text-center mb-2">¿Olvidaste tu contraseña?</h1>
-          <p className="text-center text-gray-400 mb-6">Te enviaremos un enlace para restablecerla</p>
-          {forgotMsg && (
-            <p className={`text-sm text-center mb-4 ${forgotMsg.startsWith('✅') ? 'text-green-500' : 'text-red-400'}`}>
-              {forgotMsg}
-            </p>
-          )}
-          <form onSubmit={handleForgot} className="flex flex-col gap-4">
-            <input type="email" placeholder="Correo electrónico" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} className="border border-pink-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-pink-300" required />
-            <button type="submit" disabled={forgotLoading} className="bg-pink-400 hover:bg-pink-500 text-white font-semibold py-3 rounded-xl transition">
-              {forgotLoading ? 'Enviando...' : 'Enviar enlace'}
-            </button>
-          </form>
-          <p className="text-center text-sm text-gray-400 mt-4">
-            <button onClick={volverAlLogin} className="text-pink-400 hover:underline">← Volver al inicio de sesión</button>
+      <AuthSceneryLayout
+        variant="forgot"
+        title="¿Olvidaste tu contraseña?"
+        subtitle="Te enviaremos un enlace para restablecerla"
+        footer={
+          <button type="button" onClick={volverAlLogin} className="auth-link-btn">
+            ← Volver al inicio de sesión
+          </button>
+        }
+      >
+        {forgotMsg && (
+          <p className={`auth-msg ${forgotMsg.startsWith('✅') ? 'auth-msg--ok' : 'auth-msg--error'}`}>
+            {forgotMsg}
           </p>
-        </div>
-      </div>
+        )}
+        <form onSubmit={handleForgot} className="auth-form">
+          <input
+            type="email"
+            placeholder="Correo electrónico"
+            value={forgotEmail}
+            onChange={(e) => setForgotEmail(e.target.value)}
+            className="auth-field"
+            required
+            autoComplete="email"
+          />
+          <button type="submit" disabled={forgotLoading} className="auth-btn">
+            {forgotLoading ? 'Enviando...' : 'Enviar enlace'}
+          </button>
+        </form>
+      </AuthSceneryLayout>
     )
   }
 
   return (
-    <div className="min-h-screen bg-pink-50 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-2xl shadow-md w-full max-w-md">
-        <h1 className="text-3xl font-bold text-pink-500 text-center mb-2">Bienvenido</h1>
-        <p className="text-center text-gray-400 mb-6">Inicia sesión en tu espacio</p>
-        {error && <p className="text-red-400 text-sm text-center mb-4">{error}</p>}
-        <form onSubmit={handleLogin} className="flex flex-col gap-4">
-          <input type="email" placeholder="Correo electrónico" value={email} onChange={(e) => setEmail(e.target.value)} className="border border-pink-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-pink-300" required />
-          <input type="password" placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} className="border border-pink-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-pink-300" required />
-          <div className="text-right -mt-2">
-            <button type="button" onClick={() => setShowForgot(true)} className="text-sm text-pink-400 hover:underline">¿Olvidaste tu contraseña?</button>
-          </div>
-          <button type="submit" disabled={loading} className="bg-pink-400 hover:bg-pink-500 text-white font-semibold py-3 rounded-xl transition">
-            {loading ? 'Entrando...' : 'Entrar'}
-          </button>
-        </form>
-        <p className="text-center text-sm text-gray-400 mt-4">
+    <AuthSceneryLayout
+      variant="login"
+      title="Bienvenido"
+      subtitle="Inicia sesión en tu panel IoT"
+      footer={
+        <>
           ¿No tienes cuenta?{' '}
-          <Link to="/register" className="text-pink-400 hover:underline">Regístrate</Link>
-        </p>
-      </div>
-    </div>
+          <Link to="/register" className="auth-link">Regístrate</Link>
+        </>
+      }
+    >
+      {error && <p className="auth-msg auth-msg--error">{error}</p>}
+      <form onSubmit={handleLogin} className="auth-form">
+        <input
+          type="email"
+          placeholder="Correo electrónico"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="auth-field"
+          required
+          autoComplete="email"
+        />
+        <input
+          type="password"
+          placeholder="Contraseña"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="auth-field"
+          required
+          autoComplete="current-password"
+        />
+        <div className="auth-row">
+          <button type="button" onClick={() => setShowForgot(true)} className="auth-link-btn">
+            ¿Olvidaste tu contraseña?
+          </button>
+        </div>
+        <button type="submit" disabled={loading} className="auth-btn">
+          {loading ? 'Entrando...' : 'Entrar'}
+        </button>
+      </form>
+    </AuthSceneryLayout>
   )
 }

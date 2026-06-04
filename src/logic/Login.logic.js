@@ -21,7 +21,7 @@ export function useLogin() {
     if (error) {
       setError('Correo o contraseña incorrectos')
     } else {
-      navigate('/dashboard')
+      navigate('/dashboard', { state: { fromAuth: true } })
     }
     setLoading(false)
   }
