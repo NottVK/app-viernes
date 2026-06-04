@@ -55,6 +55,8 @@ export default function Dashboard() {
   // ═══════════════════════════════════════════
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeSection, setActiveSection] = useState(isApk ? 'bombillos' : 'dashboard')
+  const [showUserInfo, setShowUserInfo] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const allNavItems = [
     { id: 'dashboard', icon: '⊞', label: 'Dashboard' },
     { id: 'bombillos', icon: '💡', label: 'Bombillos' },
@@ -601,6 +603,60 @@ const handleToggle = (id) => {
       )}
 
       {/* ═══════════════════════════════════════
+          🎨 DECORACIÓN — MODAL INFO USUARIO (MÓVIL)
+      ═══════════════════════════════════════ */}
+      {showUserInfo && isMobile && (
+        <div onClick={() => setShowUserInfo(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: theme.card, borderRadius: '20px', padding: '32px', width: '100%', maxWidth: '340px', margin: 'auto', border: `1px solid ${theme.border}` }}>
+            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+              <div style={{ width: '80px', height: '80px', borderRadius: '50%', margin: '0 auto 16px', background: fotoUrl ? 'transparent' : '#0ea5e9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', fontWeight: '700', color: 'white', overflow: 'hidden', border: '3px solid #38bdf840' }}>
+                {fotoUrl ? <img src={fotoUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : iniciales}
+              </div>
+              <div style={{ fontSize: '20px', fontWeight: '700', color: theme.text, marginBottom: '4px' }}>{nombre} {apellido}</div>
+              <div style={{ fontSize: '13px', color: theme.textMuted }}>{user?.email}</div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ padding: '12px', background: theme.sectionBg, borderRadius: '10px', border: `1px solid ${theme.border}` }}>
+                <div style={{ fontSize: '12px', color: theme.textMuted, marginBottom: '4px' }}>Rol</div>
+                <div style={{ fontSize: '14px', fontWeight: '600', color: theme.text }}>{perfil?.rol || 'Usuario'}</div>
+              </div>
+              <button onClick={() => { setShowUserInfo(false); setShowLogoutConfirm(true) }} style={{ width: '100%', padding: '12px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
+                Cerrar sesión
+              </button>
+              <button onClick={() => setShowUserInfo(false)} style={{ width: '100%', padding: '12px', background: 'transparent', color: theme.textMuted, border: `1px solid ${theme.border}`, borderRadius: '10px', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}>
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════
+          🎨 DECORACIÓN — MODAL CONFIRMAR CIERRE DE SESIÓN
+      ═══════════════════════════════════════ */}
+      {showLogoutConfirm && (
+        <div onClick={() => setShowLogoutConfirm(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: theme.card, borderRadius: '20px', padding: '32px', width: '100%', maxWidth: '380px', margin: 'auto', border: `1px solid ${theme.border}` }}>
+            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
+              <div style={{ fontSize: '20px', fontWeight: '700', color: theme.text, marginBottom: '8px' }}>¿Cerrar sesión?</div>
+              <div style={{ fontSize: '14px', color: theme.textMuted, lineHeight: 1.5 }}>
+                ¿Estás seguro de que quieres cerrar tu sesión? Tendrás que volver a iniciar sesión para acceder al panel.
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={() => setShowLogoutConfirm(false)} style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${theme.border}`, color: theme.textMuted, borderRadius: '10px', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}>
+                Cancelar
+              </button>
+              <button onClick={handleLogout} style={{ flex: 1, padding: '12px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
+                Cerrar sesión
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════
           🎨 DECORACIÓN — SIDEBAR
       ═══════════════════════════════════════ */}
       <div style={{ position: isMobile ? 'fixed' : 'relative', left: 0, top: 0, height: '100vh', width: `${SIDEBAR_WIDTH}px`, flexShrink: 0, background: theme.sidebar, borderRight: '1px solid #1e293b', transform: isMobile ? (sidebarOpen ? 'translateX(0)' : 'translateX(-100%)') : 'translateX(0)', transition: 'transform 0.3s ease, background 0.5s ease', zIndex: 50, display: 'flex', flexDirection: 'column' }}>
@@ -659,7 +715,7 @@ const handleToggle = (id) => {
           </div>
         </div>
         <div style={{ padding: '16px 20px' }}>
-          <button onClick={handleLogout} style={{ width: '100%', padding: '9px', background: 'transparent', color: '#f87171', border: '1px solid #374151', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+          <button onClick={() => setShowLogoutConfirm(true)} style={{ width: '100%', padding: '9px', background: 'transparent', color: '#f87171', border: '1px solid #374151', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
             <span>⎋</span> Cerrar sesión
           </button>
         </div>
@@ -683,15 +739,24 @@ const handleToggle = (id) => {
               <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: mqttStatus.includes('✅') ? '#22c55e' : '#f59e0b', boxShadow: mqttStatus.includes('✅') ? '0 0 6px #22c55e' : 'none' }} />
               <span style={{ fontSize: '12px', color: mqttStatus.includes('✅') ? '#22c55e' : '#f59e0b', fontWeight: '500' }}>MQTT</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: theme.text }}>{nombre}</div>
-                <div style={{ fontSize: '11px', color: theme.textMuted }}>{user?.email}</div>
-              </div>
-              <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: fotoUrl ? 'transparent' : '#0ea5e9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: '600', color: 'white', overflow: 'hidden', cursor: 'pointer', flexShrink: 0, border: '2px solid #38bdf840' }}>
+            {isMobile ? (
+              <div 
+                onClick={() => setShowUserInfo(true)}
+                style={{ width: '40px', height: '40px', borderRadius: '50%', background: fotoUrl ? 'transparent' : '#0ea5e9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: '600', color: 'white', overflow: 'hidden', cursor: 'pointer', flexShrink: 0, border: '2px solid #38bdf840' }}
+              >
                 {fotoUrl ? <img src={fotoUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : iniciales}
               </div>
-            </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '13px', fontWeight: '600', color: theme.text }}>{nombre}</div>
+                  <div style={{ fontSize: '11px', color: theme.textMuted }}>{user?.email}</div>
+                </div>
+                <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: fotoUrl ? 'transparent' : '#0ea5e9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: '600', color: 'white', overflow: 'hidden', cursor: 'pointer', flexShrink: 0, border: '2px solid #38bdf840' }}>
+                  {fotoUrl ? <img src={fotoUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : iniciales}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
