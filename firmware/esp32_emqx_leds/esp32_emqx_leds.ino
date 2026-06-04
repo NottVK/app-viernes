@@ -77,7 +77,7 @@ void publicarTodosEstados() {
 }
 
 /** Modificado: Fuerza exclusividad de un solo color a la vez */
-void setCanal(bool& canal, bool on, const char* estadoTopic) {
+void setCanal(bool& canal, bool on) {
   if (on) {
     // Si se enciende un color, OBLIGATORIAMENTE apagamos todos los demás primero
     canalRojo  = false;
@@ -107,11 +107,11 @@ void onMqttMessage(char* topic, byte* payload, unsigned int length) {
   Serial.printf("MQTT %s = %s\n", topic, msg.c_str());
 
   if (t == TOPIC_LED1_CTRL) {
-    setCanal(canalRojo, msg == "ON", TOPIC_LED1_EST);
+    setCanal(canalRojo, msg == "ON");
   } else if (t == TOPIC_LED2_CTRL) {
-    setCanal(canalVerde, msg == "ON", TOPIC_LED2_EST);
+    setCanal(canalVerde, msg == "ON");
   } else if (t == TOPIC_LED3_CTRL) {
-    setCanal(canalAzul, msg == "ON", TOPIC_LED3_EST);
+    setCanal(canalAzul, msg == "ON");
   }
 }
 
@@ -171,9 +171,7 @@ void setup() {
 
   // Variables iniciales en falso y pines aplicados para inicio totalmente apagado
   canalRojo = canalVerde = canalAzul = false;
-  aplicarRgb(); 
-
-  // Se eliminó probarRgbInicio() para erradicar el parpadeo de colores en el arranque
+  aplicarRgb();
 
   clientId = "ESP32_";
   clientId += String((uint32_t)ESP.getEfuseMac(), HEX);
