@@ -57,6 +57,7 @@ export default function Dashboard() {
   const [activeSection, setActiveSection] = useState(isApk ? 'bombillos' : 'dashboard')
   const [showUserInfo, setShowUserInfo] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [darkMode, setDarkMode] = useState(false)
   const allNavItems = [
     { id: 'dashboard', icon: '⊞', label: 'Dashboard' },
     { id: 'bombillos', icon: '💡', label: 'Bombillos' },
@@ -65,7 +66,7 @@ export default function Dashboard() {
     { id: 'soporte', icon: '🛠', label: 'Soporte' },
     { id: 'config', icon: '⚙', label: 'Configuración' },
   ]
-  const navItems = isApk ? allNavItems.filter((item) => item.id !== 'config') : allNavItems
+  const navItems = isMobile ? allNavItems.filter((item) => item.id !== 'config') : allNavItems
 
   // ═══════════════════════════════════════════
   // 🔧 LÓGICA — BOMBILLOS Y MQTT
@@ -342,7 +343,7 @@ const handleToggle = (id) => {
   }, [])
 
   useEffect(() => {
-    if (isApk) return
+    if (isMobile) return
     if (!mqttChartRef.current || !httpChartRef.current || !ledChartRef.current) return
     import('chart.js').then(({ Chart, registerables }) => {
       Chart.register(...registerables)
@@ -423,16 +424,29 @@ const handleToggle = (id) => {
   // ═══════════════════════════════════════════
   // 🎨 DATOS ESTÁTICOS DE DECORACIÓN
   // ═══════════════════════════════════════════
-  const theme = {
-    bg: '#f8fafc',
-    card: '#ffffff',
-    border: '#e2e8f0',
-    text: '#0f172a',
-    textMuted: '#94a3b8',
-    topbar: 'rgba(248,250,252,0.95)',
-    sectionBg: '#f1f5f9',
-    sidebar: '#0f172a',
+  const themes = {
+    light: {
+      bg: '#f8fafc',
+      card: '#ffffff',
+      border: '#e2e8f0',
+      text: '#0f172a',
+      textMuted: '#94a3b8',
+      topbar: 'rgba(248,250,252,0.95)',
+      sectionBg: '#f1f5f9',
+      sidebar: '#0f172a',
+    },
+    dark: {
+      bg: '#0f172a',
+      card: '#1e293b',
+      border: '#334155',
+      text: '#f1f5f9',
+      textMuted: '#94a3b8',
+      topbar: 'rgba(15,23,42,0.95)',
+      sectionBg: '#1e293b',
+      sidebar: '#020617',
+    }
   }
+  const theme = isMobile ? themes.light : (darkMode ? themes.dark : themes.light)
   const progress = Math.min(scrollY / 3, 100)
   const progress2 = Math.min(scrollY / 5, 100)
   const progress3 = Math.min(scrollY / 4, 100)
@@ -455,7 +469,39 @@ const handleToggle = (id) => {
   // 🎨 RENDER PRINCIPAL
   // ═══════════════════════════════════════════
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', fontFamily: 'system-ui, sans-serif', background: theme.sidebar, transition: 'all 0.5s ease' }}>
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', fontFamily: 'system-ui, sans-serif', background: theme.sidebar, transition: 'all 0.5s ease', position: 'relative' }}>
+
+      {/* ═══════════════════════════════════════
+          🎨 DECORACIÓN — ESTRELLITAS MODO OSCURO
+      ═══════════════════════════════════════ */}
+      {darkMode && !isMobile && (
+        <>
+          {[...Array(50)].map((_, i) => (
+            <div
+              key={i}
+              style={{
+                position: 'fixed',
+                width: Math.random() * 2 + 1,
+                height: Math.random() * 2 + 1,
+                background: 'white',
+                borderRadius: '50%',
+                top: `${Math.random() * 100}%`,
+                left: `${Math.random() * 100}%`,
+                opacity: Math.random() * 0.4 + 0.2,
+                animation: `twinkle ${Math.random() * 4 + 3}s ease-in-out infinite`,
+                animationDelay: `${Math.random() * 3}s`,
+                zIndex: 0,
+              }}
+            />
+          ))}
+          <style>{`
+            @keyframes twinkle {
+              0%, 100% { opacity: 0.2; transform: scale(1); }
+              50% { opacity: 0.6; transform: scale(1.1); }
+            }
+          `}</style>
+        </>
+      )}
 
       {isMobile && sidebarOpen && (
         <div onClick={() => setSidebarOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 40, backdropFilter: 'blur(2px)' }} />
@@ -464,7 +510,7 @@ const handleToggle = (id) => {
       {/* ═══════════════════════════════════════
           🎨 DECORACIÓN — MODAL EDITAR MIEMBRO
       ═══════════════════════════════════════ */}
-      {editandoMiembro && !isApk && (
+      {editandoMiembro && !isMobile && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', overflowY: 'auto' }}>
           <div style={{ background: 'white', borderRadius: '20px', padding: '32px', width: '100%', maxWidth: '440px', margin: 'auto' }}>
             <div style={{ fontSize: '18px', fontWeight: '600', color: '#0f172a', marginBottom: '24px' }}>✏️ Editar mi perfil</div>
@@ -515,7 +561,7 @@ const handleToggle = (id) => {
       {/* ═══════════════════════════════════════
           🎨 DECORACIÓN — MODAL MQTT
       ═══════════════════════════════════════ */}
-      {editandoMqtt && !isApk && (
+      {editandoMqtt && !isMobile && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', overflowY: 'auto' }}>
           <div style={{ background: theme.card, borderRadius: '20px', padding: '32px', width: '100%', maxWidth: '440px', margin: 'auto', border: `1px solid ${theme.border}` }}>
             <div style={{ fontSize: '18px', fontWeight: '600', color: theme.text, marginBottom: '24px' }}>⚙️ Configurar MQTT</div>
@@ -568,7 +614,7 @@ const handleToggle = (id) => {
       {/* ═══════════════════════════════════════
           🎨 DECORACIÓN — MODAL HTTP
       ═══════════════════════════════════════ */}
-      {editandoHttp && !isApk && (
+      {editandoHttp && !isMobile && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', overflowY: 'auto' }}>
           <div style={{ background: theme.card, borderRadius: '20px', padding: '32px', width: '100%', maxWidth: '440px', margin: 'auto', border: `1px solid ${theme.border}` }}>
             <div style={{ fontSize: '18px', fontWeight: '600', color: theme.text, marginBottom: '24px' }}>⚙️ Configurar HTTP</div>
@@ -667,16 +713,23 @@ const handleToggle = (id) => {
             <div style={{ fontSize: '11px', color: '#38bdf8' }}>ESP32 Control</div>
           </div>
         </div>
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid #1e293b', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: fotoUrl ? 'transparent' : '#0ea5e9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '15px', fontWeight: '600', color: 'white', overflow: 'hidden', flexShrink: 0 }}>
-            {fotoUrl ? <img src={fotoUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : iniciales}
-          </div>
-          <div style={{ overflow: 'hidden' }}>
-            <div style={{ fontSize: '13px', fontWeight: '600', color: '#f1f5f9', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nombre} {apellido}</div>
-            <div style={{ fontSize: '11px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.email}</div>
-          </div>
-        </div>
-        <nav style={{ flex: 1, padding: '12px 0', overflowY: 'auto' }}>
+        <nav style={{ flex: 1, padding: '12px 0', overflowY: 'auto', scrollbarWidth: 'thin', scrollbarColor: darkMode ? '#475569 #020617' : '#cbd5e1 #0f172a' }}>
+          <style>{`
+            nav::-webkit-scrollbar {
+              width: 6px;
+            }
+            nav::-webkit-scrollbar-track {
+              background: ${darkMode ? '#020617' : '#0f172a'};
+              border-radius: 3px;
+            }
+            nav::-webkit-scrollbar-thumb {
+              background: ${darkMode ? '#475569' : '#cbd5e1'};
+              border-radius: 3px;
+            }
+            nav::-webkit-scrollbar-thumb:hover {
+              background: ${darkMode ? '#64748b' : '#94a3b8'};
+            }
+          `}</style>
           <div style={{ fontSize: '10px', fontWeight: '600', color: '#475569', letterSpacing: '1px', padding: '8px 20px 4px', textTransform: 'uppercase' }}>Principal</div>
           {navItems.slice(0, 2).map(item => (
             <div key={item.id} onClick={() => { setActiveSection(item.id); if (isMobile) setSidebarOpen(false) }} style={{ padding: '10px 20px', margin: '2px 8px', display: 'flex', alignItems: 'center', gap: '10px', background: activeSection === item.id ? 'linear-gradient(90deg, #0ea5e920, #6366f110)' : 'transparent', borderRadius: '10px', borderLeft: activeSection === item.id ? '3px solid #38bdf8' : '3px solid transparent', cursor: 'pointer', fontSize: '14px', color: activeSection === item.id ? '#f1f5f9' : '#64748b', transition: 'all 0.2s' }}>
@@ -693,7 +746,7 @@ const handleToggle = (id) => {
               {activeSection === item.id && <div style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', background: '#38bdf8' }} />}
             </div>
           ))}
-          {!isApk && (
+          {!isMobile && (
             <div style={{ fontSize: '10px', fontWeight: '600', color: '#475569', letterSpacing: '1px', padding: '12px 20px 4px', textTransform: 'uppercase' }}>Configuración</div>
           )}
           {navItems.slice(5).map(item => (
@@ -715,6 +768,11 @@ const handleToggle = (id) => {
           </div>
         </div>
         <div style={{ padding: '16px 20px' }}>
+          {!isMobile && (
+            <button onClick={() => setDarkMode(!darkMode)} style={{ width: '100%', padding: '9px', background: 'transparent', color: theme.textMuted, border: `1px solid ${theme.border}`, borderRadius: '8px', cursor: 'pointer', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '8px' }}>
+              <span>{darkMode ? '☀️' : '🌙'}</span> {darkMode ? 'Modo claro' : 'Modo oscuro'}
+            </button>
+          )}
           <button onClick={() => setShowLogoutConfirm(true)} style={{ width: '100%', padding: '9px', background: 'transparent', color: '#f87171', border: '1px solid #374151', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
             <span>⎋</span> Cerrar sesión
           </button>
@@ -777,7 +835,7 @@ const handleToggle = (id) => {
                   <div style={{ marginTop: '40px', fontSize: '24px', animation: 'bounce 2s infinite', opacity: Math.max(0, 1 - scrollY / 100) }}>↓</div>
                 </div>
               </div>
-              {isApk ? (
+              {isMobile ? (
                 <div style={{ background: '#0f172a', padding: '48px 20px 60px', borderTop: '1px solid #1e293b' }}>
                   <div style={{ maxWidth: '420px', margin: '0 auto', textAlign: 'center', background: '#1e293b', borderRadius: '20px', padding: '32px 24px', border: '1px solid #334155' }}>
                     <div style={{ fontSize: '40px', marginBottom: '12px' }}>💡</div>
@@ -809,7 +867,7 @@ const handleToggle = (id) => {
                           <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#38bdf8' }} />Publicados</span>
                           <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#818cf8' }} />Recibidos</span>
                         </div>
-                        <div style={{ position: 'relative', height: '180px' }}><canvas ref={mqttChartRef} /></div>
+                        <div style={{ position: 'relative', height: '180px' }}>{!isMobile && <canvas ref={mqttChartRef} />}</div>
                       </div>
                       <div style={{ background: '#1e293b', borderRadius: '16px', padding: '24px', border: '1px solid #334155' }}>
                         <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px' }}>Protocolo HTTP</div>
@@ -818,7 +876,7 @@ const handleToggle = (id) => {
                           <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#4ade80' }} />Supabase REST</span>
                           <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#fde047' }} />Auth requests</span>
                         </div>
-                        <div style={{ position: 'relative', height: '180px' }}><canvas ref={httpChartRef} /></div>
+                        <div style={{ position: 'relative', height: '180px' }}>{!isMobile && <canvas ref={httpChartRef} />}</div>
                       </div>
                       <div style={{ background: '#1e293b', borderRadius: '16px', padding: '20px', border: '1px solid #334155' }}>
                         <div style={{ background: carruselCards[carruselIndex].bg, borderRadius: '14px', padding: '28px 20px', border: `1px solid ${carruselCards[carruselIndex].color}33`, textAlign: 'center', minHeight: '165px', transition: 'all 0.4s ease', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
@@ -840,7 +898,7 @@ const handleToggle = (id) => {
                         ].map(led => (
                           <div key={led.label} style={{ background: '#1e293b', borderRadius: '12px', padding: '16px', border: '1px solid #334155', display: 'flex', alignItems: 'center', gap: '16px' }}>
                             <div style={{ position: 'relative', width: '60px', height: '60px', flexShrink: 0 }}>
-                              <canvas ref={led.ref} />
+                              {!isMobile && <canvas ref={led.ref} />}
                               <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
                                 <span style={{ fontSize: '14px', fontWeight: '700', color: '#fde047' }}>{led.onCount}</span>
                               </div>
@@ -986,7 +1044,7 @@ const handleToggle = (id) => {
                   </div>
                 </div>
               </div>
-              {isApk && (
+              {isMobile && (
                 <div style={{ background: theme.card, borderRadius: '16px', padding: '24px', border: `1px solid ${theme.border}` }}>
                   <div style={{ fontSize: '16px', fontWeight: '600', color: theme.text, marginBottom: '16px' }}>Estado de conexión</div>
                   {[
@@ -1003,7 +1061,7 @@ const handleToggle = (id) => {
                   </p>
                 </div>
               )}
-              {!isApk && (
+              {!isMobile && (
               <>
               <div style={{ background: theme.card, borderRadius: '16px', padding: '24px', border: `1px solid ${theme.border}` }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
@@ -1011,7 +1069,9 @@ const handleToggle = (id) => {
                     <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#0ea5e920', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>🖥️</div>
                     <div style={{ fontSize: '16px', fontWeight: '600', color: theme.text }}>Servidor Broker MQTT</div>
                   </div>
-                  <button onClick={() => setEditandoMqtt(true)} style={{ background: '#0ea5e9', color: 'white', border: 'none', borderRadius: '8px', padding: '6px 14px', fontSize: '12px', cursor: 'pointer', fontWeight: '500' }}>✏️ Editar</button>
+                  {!isMobile && (
+                    <button onClick={() => setEditandoMqtt(true)} style={{ background: '#0ea5e9', color: 'white', border: 'none', borderRadius: '8px', padding: '6px 14px', fontSize: '12px', cursor: 'pointer', fontWeight: '500' }}>✏️ Editar</button>
+                  )}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                   <div style={{ background: theme.sectionBg, borderRadius: '12px', padding: '16px' }}>
@@ -1086,7 +1146,7 @@ const handleToggle = (id) => {
                     </div>
                   )}
                   <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, #0f172a 100%)' }} />
-                  {!isApk && (
+                  {!isMobile && (
                     <label style={{ position: 'absolute', bottom: '12px', right: '12px', background: 'rgba(14,165,233,0.9)', color: 'white', fontSize: '12px', padding: '6px 12px', borderRadius: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', zIndex: 2 }}>
                       📷 {grupoFotoUrl ? 'Cambiar foto' : 'Subir foto'}
                       <input type="file" accept="image/*" onChange={subirFotoGrupo} style={{ display: 'none' }} />
@@ -1121,7 +1181,7 @@ const handleToggle = (id) => {
                         <div style={{ fontSize: '16px', fontWeight: '600', color: theme.text }}>{m.nombre}</div>
                         <div style={{ fontSize: '13px', color: colores[i % colores.length], fontWeight: '500' }}>{m.rol}</div>
                       </div>
-                      {!isApk && (
+                      {!isMobile && (
                         <button onClick={() => abrirEdicion(m)} style={{ background: '#f8fafc', border: `1px solid ${theme.border}`, borderRadius: '8px', padding: '8px 14px', fontSize: '13px', cursor: 'pointer', color: theme.textMuted }}>✏️ Editar</button>
                       )}
                     </div>
@@ -1201,7 +1261,7 @@ const handleToggle = (id) => {
           {/* ═══════════════════════════════════════
               🎨 DECORACIÓN — SECCIÓN CONFIGURACIÓN
           ═══════════════════════════════════════ */}
-          {activeSection === 'config' && !isApk && (
+          {activeSection === 'config' && !isMobile && (
             <div style={{ padding: '40px 20px', maxWidth: '600px', margin: '0 auto' }}>
               <div style={{ background: theme.card, borderRadius: '16px', padding: '32px', border: `1px solid ${theme.border}` }}>
                 <div style={{ fontSize: '18px', fontWeight: '500', color: theme.text, marginBottom: '24px' }}>Configuración de perfil</div>
